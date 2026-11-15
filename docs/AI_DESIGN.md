@@ -46,5 +46,20 @@ Checked against the [hybrid docs](https://firebase.google.com/docs/ai-logic/hybr
 | `firebase` and Prompt API are fast-moving. | API shape drift. | Pinned via lockfile; SDK-level integration test catches routing changes. |
 | Spec example uses `releasePeriod: { after, before: null }`. | Nullables are poorly supported by the on-device constraint. | Flattened to optional `releaseAfter` / `releaseBefore`. |
 
+## From preferences to recommendations (Phase 2)
+
+The model only extracts preferences. Everything after that is deterministic TypeScript:
+
+1. **Vocabulary mapping** (`catalogue/vocabulary.ts`): "sci-fi" → *science fiction*, "feel-good" → *heartwarming*, "clever plot" → *complex plot*. Neighbouring moods ("tense" for "suspenseful") count as half matches.
+2. **Guards** (`recommendations/guards.ts`). These never add preferences, only remove unsupported ones:
+   - A release period is kept only if the request contains a time cue ("recent", "90s", "last ten years"…). Gemini Nano invented *2020–2027* for "a short, light-hearted series I can finish this weekend" in live testing.
+   - Future years are dropped; excluded genres are kept only if the request rules something out ("not", "without"…).
+   - Each removal is shown to the user as a note.
+3. **Ranking** (`recommendations/ranking.ts`): weighted components (genre 0.3, mood 0.25, theme 0.15, similarity to a named title 0.3, era 0.25, length 0.25, taste profile 0.15). Only components the viewer expressed take part, and weights are renormalised. Hard filters: content type, excluded genres, the named title itself, and a stated period when at least three titles satisfy it. Era or length alone never qualifies a title.
+4. **Explanations** are assembled from the components that matched, using catalogue metadata only, e.g. *"Recommended because it's science fiction and the mood is tense."*
+5. **Fallback:** if Firebase is not configured or both AI paths fail, `keywordExtraction.ts` spots vocabulary terms in the text. Results are labelled *AI unavailable — matched by keywords* with the reason.
+
+Prompt v3 adds a `length` field (short / long / any), so "finish this weekend" survives extraction.
+
 ## Workflow B — cloud assistant (Phase 4, not started)
 Will use a separate `ONLY_IN_CLOUD`-style cloud model with `tools: [{ functionDeclarations }]`, a bounded function-calling loop with Zod-validated arguments, and deterministic tool implementations.

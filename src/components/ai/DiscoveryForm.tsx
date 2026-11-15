@@ -1,33 +1,28 @@
 import { useState, type FormEvent } from 'react'
 import { Loader2, Sparkles } from 'lucide-react'
-import type { HybridDeps } from '../../services/ai/hybridInference'
 import { MAX_REQUEST_LENGTH } from '../../services/ai/hybridInference'
-import { usePreferenceExtraction } from '../../hooks/usePreferenceExtraction'
 import { useOnDeviceModel, type DeviceModelController } from '../../hooks/useOnDeviceModel'
 import type { OnDeviceAvailability } from '../../services/ai/onDeviceAvailability'
-import { InferenceBadge } from './InferenceBadge'
-import { PreferenceResult } from './PreferenceResult'
 import { DeviceModelStatus } from './DeviceModelStatus'
+import { EXAMPLE_REQUESTS } from './examples'
 
-const EXAMPLES = [
-  'Something like Interstellar, but darker and more suspenseful',
-  'A psychological thriller with a clever plot from the last ten years',
-  'A short, light-hearted series I can finish this weekend',
-]
 
-export function DiscoveryPrompt(props: {
-  deps: HybridDeps | null
+export function DiscoveryForm(props: {
+  onSubmit: (request: string, options: { forceCloud: boolean }) => void
+  loading?: boolean
+  initialValue?: string
   deviceModel: DeviceModelController | null
   probe?: () => Promise<OnDeviceAvailability>
+  submitLabel?: string
 }) {
-  const { state, run } = usePreferenceExtraction(props.deps)
   const device = useOnDeviceModel(props.deviceModel, props.probe)
-  const [text, setText] = useState('')
+  const [text, setText] = useState(props.initialValue ?? '')
   const [forceCloud, setForceCloud] = useState(false)
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
-    void run(text, { forceCloud }).then(() => device.refresh())
+    if (!text.trim()) return
+    props.onSubmit(text, { forceCloud })
   }
 
   return (
@@ -46,16 +41,16 @@ export function DiscoveryPrompt(props: {
         />
         <button
           type="submit"
-          disabled={state.status === 'loading' || !text.trim()}
+          disabled={props.loading || !text.trim()}
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent-600 px-5 py-3 font-medium text-white transition-colors hover:bg-accent-500 disabled:opacity-50"
         >
-          {state.status === 'loading' ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />}
-          {state.status === 'loading' ? 'Understanding…' : 'Understand my request'}
+          {props.loading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />}
+          {props.loading ? 'Finding matches…' : (props.submitLabel ?? 'Find something')}
         </button>
       </form>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        {EXAMPLES.map((ex) => (
+        {EXAMPLE_REQUESTS.map((ex) => (
           <button key={ex} type="button" onClick={() => setText(ex)} className="rounded-full border border-ink-800 px-3 py-1 text-xs text-ink-300 hover:border-ink-700 hover:text-ink-100">
             {ex}
           </button>
@@ -75,29 +70,6 @@ export function DiscoveryPrompt(props: {
           Cloud only
         </label>
       </div>
-
-      {state.status === 'error' && (
-        <div role="alert" className="mt-5 rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
-          {state.message}
-          {state.raw && (
-            <details className="mt-2 text-xs text-ink-300">
-              <summary className="cursor-pointer">What the model returned</summary>
-              <pre className="mt-2 overflow-x-auto whitespace-pre-wrap">{state.raw}</pre>
-            </details>
-          )}
-        </div>
-      )}
-
-      {state.status === 'success' && (
-        <div className="mt-6 space-y-4 border-t border-ink-800 pt-5">
-          <InferenceBadge record={state.result.record} />
-          <PreferenceResult preferences={state.result.preferences} />
-          <details className="text-xs text-ink-500">
-            <summary className="cursor-pointer">Raw model output</summary>
-            <pre className="mt-2 overflow-x-auto rounded-lg bg-ink-950 p-3">{state.result.raw}</pre>
-          </details>
-        </div>
-      )}
     </div>
   )
 }

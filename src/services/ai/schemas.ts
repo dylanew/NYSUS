@@ -19,9 +19,10 @@ export const preferenceJsonSchema = {
     releaseAfter: { type: 'integer' },
     releaseBefore: { type: 'integer' },
     contentType: { type: 'string', enum: ['film', 'series', 'any'] },
+    length: { type: 'string', enum: ['short', 'long', 'any'] },
     confidence: { type: 'number' },
   },
-  required: ['genres', 'moods', 'preferredThemes', 'excludeGenres', 'contentType', 'confidence'],
+  required: ['genres', 'moods', 'preferredThemes', 'excludeGenres', 'contentType', 'length', 'confidence'],
 } as const
 
 const label = z.string().trim().min(1).max(60).transform((s) => s.toLowerCase())
@@ -45,6 +46,8 @@ export const viewerPreferencesSchema = z
     releaseAfter: year,
     releaseBefore: year,
     contentType: z.enum(['film', 'series', 'any']),
+    // Optional on input so older/looser model output still validates; defaults to "any".
+    length: z.enum(['short', 'long', 'any']).default('any'),
     confidence: z.number().min(0).max(1),
   })
   .refine((p) => p.releaseAfter === undefined || p.releaseBefore === undefined || p.releaseAfter <= p.releaseBefore, {

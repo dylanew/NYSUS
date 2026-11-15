@@ -29,6 +29,7 @@ export function PreferenceResult({ preferences }: { preferences: ViewerPreferenc
       <Chips label="Avoid" items={preferences.excludeGenres} />
       {period && <Chips label="Released" items={[period]} />}
       <Chips label="Type" items={[preferences.contentType]} />
+      {preferences.length !== 'any' && <Chips label="Length" items={[preferences.length]} />}
       <Chips label="Confidence" items={[`${Math.round(preferences.confidence * 100)}%`]} />
     </dl>
   )
