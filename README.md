@@ -2,7 +2,9 @@
 
 An AI-powered streaming companion: personalised entertainment discovery plus intelligent (simulated) playback diagnostics. Built for the Firebase #BuildHybridAI hackathon.
 
-> Status: **Phase 2 — entertainment discovery.** Describe what you want to watch; Firebase AI Logic hybrid inference extracts structured preferences on-device (Chrome's built-in model) or in the cloud (Gemini) and shows which one actually ran. Deterministic ranking then recommends titles from a 48-title demo catalogue, explains each match, and lets you build a watchlist. Without Firebase, discovery falls back to clearly labelled keyword matching.
+> Status: **Phase 3 — simulated player and stream health.** Pick a title, choose a network condition (stable, unstable, poor, interruption) and watch a deterministic simulator stall, switch quality and fail just like a real player would; Stream Health charts the telemetry and lists rule-based findings with event IDs as evidence.
+>
+> Phase 2: Describe what you want to watch; Firebase AI Logic hybrid inference extracts structured preferences on-device (Chrome's built-in model) or in the cloud (Gemini) and shows which one actually ran. Deterministic ranking then recommends titles from a 48-title demo catalogue, explains each match, and lets you build a watchlist. Without Firebase, discovery falls back to clearly labelled keyword matching.
 
 ## Quick start
 

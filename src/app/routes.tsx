@@ -6,6 +6,8 @@ import { PlaceholderPage } from '../pages/PlaceholderPage'
 import { DiscoverPage } from '../pages/DiscoverPage'
 import { WatchlistPage } from '../pages/WatchlistPage'
 import { TitlePage } from '../pages/TitlePage'
+import { PlayerPage } from '../pages/PlayerPage'
+import { StreamHealthPage } from '../pages/StreamHealthPage'
 
 export const routes: RouteObject[] = [
   {
@@ -16,8 +18,8 @@ export const routes: RouteObject[] = [
       { path: 'discover', element: <DiscoverPage /> },
       { path: 'watchlist', element: <WatchlistPage /> },
       { path: 'title/:id', element: <TitlePage /> },
-      { path: 'player', element: <PlaceholderPage title="Player" phase={3} /> },
-      { path: 'health', element: <PlaceholderPage title="Stream Health" phase={3} /> },
+      { path: 'player', element: <PlayerPage /> },
+      { path: 'health', element: <StreamHealthPage /> },
       { path: 'assistant', element: <PlaceholderPage title="AI Assistant" phase={4} /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <PlaceholderPage title="Not found" /> },

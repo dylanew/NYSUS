@@ -9,7 +9,7 @@ src/
     layout/     AppLayout (sidebar / mobile nav), Wordmark, nav items
     ai/         DiscoveryPrompt, InferenceBadge, PreferenceResult, DeviceModelStatus
     media/      MediaCard, Artwork (generated), WatchlistButton, FilterChips
-  data/         catalogue.ts (48 curated films and series)
+  data/         catalogue.ts (48 curated films and series), demoScenarios.ts (network scenarios, bitrate ladder)
   hooks/        useAiDeps, useDiscovery, useOnDeviceModel, useWatchlist
   pages/        Home, Discover, Watchlist, Title, Settings, Placeholder (later phases)
   types/        media.ts
@@ -21,10 +21,17 @@ src/
     recommendations/
                 discover.ts (Journey A pipeline), guards.ts, ranking.ts, keywordExtraction.ts
     watchlist/  watchlistStore.ts (localStorage, swappable for Firestore in Phase 5)
+    playback/   engine.ts (deterministic simulator), metrics.ts, playerStore.ts (app-wide timer)
+    diagnostics/ buffering.ts (stall analysis), findings.ts (rule-based health findings)
 tests/
   unit/         pure logic
   integration/  services + components, including the real firebase/ai SDK with faked Chrome/network
   eval/         discovery evaluation set (recorded live model outputs → expected recommendations)
+
+## Playback simulation (Journey B)
+`PlaybackEngine.tick()` advances one simulated second: read the scenario's network sample → download (throughput ÷ bitrate seconds of video, 12 s buffer cap) → play or stall → adaptive bitrate (EWMA estimate, 0.8 safety down, 0.6 hysteresis up) → record events. Network "noise" is a hash of (scenario, second), so identical actions always give identical telemetry. The store only decides how often to tick (1×–10×), and "Simulate 30 s" calls the same tick 30 times.
+
+Telemetry is a typed event log (`types/playback.ts`) with stable ids (`s1-e42`). All metrics and findings are pure functions of that log.
 
 ## Journey A pipeline
 request → `extractPreferences` (hybrid AI, or keyword fallback if AI is unavailable)
@@ -39,4 +46,4 @@ request → `extractPreferences` (hybrid AI, or keyword fallback if AI is unavai
 - **Lazy, singleton initialisation** of the Firebase app, App Check and AI models.
 
 ## Planned additions (later phases)
-`services/playback`, `services/diagnostics`, `services/ai/cloudAssistant.ts`, `data/demoScenarios.ts`, Recharts dashboards, Firestore persistence.
+`services/diagnostics`, `services/ai/cloudAssistant.ts`, `data/demoScenarios.ts`, Recharts dashboards, Firestore persistence.

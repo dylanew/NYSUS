@@ -15,6 +15,9 @@
 | `tests/unit/keywordAndWatchlist.test.ts` | Keyword fallback; watchlist persistence, corrupt and blocked storage |
 | `tests/integration/discover.test.ts` | Journey A end to end with fake models: guard notes, reference titles, labelled keyword fallback |
 | `tests/integration/DiscoverPage.test.tsx` | Search → explained results → add to watchlist → mark watched; filter browsing |
+| `tests/unit/playbackEngine.test.ts` | Scenario determinism and shape; engine behaviour per scenario (no stalls / occasional / frequent / error + recovery); fixed 1080p vs auto; pause; ending |
+| `tests/unit/playbackMetrics.test.ts` | Metrics on a hand-built timeline (state split, ratio, averages, frequency, windows, empty session); stall analysis; findings |
+| `tests/integration/player.test.tsx` | Player store timer and speed; Player → Stream Health journey through an interruption |
 | `tests/eval/discoveryEval.test.ts` | Evaluation set: 6 requests (3 with recorded live model output) with expected and forbidden recommendations |
 
 ## Evaluation
