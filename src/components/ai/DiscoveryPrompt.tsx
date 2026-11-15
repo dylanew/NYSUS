@@ -23,10 +23,11 @@ export function DiscoveryPrompt(props: {
   const { state, run } = usePreferenceExtraction(props.deps)
   const device = useOnDeviceModel(props.deviceModel, props.probe)
   const [text, setText] = useState('')
+  const [forceCloud, setForceCloud] = useState(false)
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
-    void run(text).then(() => device.refresh())
+    void run(text, { forceCloud }).then(() => device.refresh())
   }
 
   return (
@@ -61,7 +62,7 @@ export function DiscoveryPrompt(props: {
         ))}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <DeviceModelStatus
           availability={device.availability}
           progress={device.progress}
@@ -69,6 +70,10 @@ export function DiscoveryPrompt(props: {
           onPrepare={() => void device.prepare()}
           canPrepare={props.deviceModel !== null}
         />
+        <label className="flex items-center gap-2 text-xs text-ink-300">
+          <input type="checkbox" checked={forceCloud} onChange={(e) => setForceCloud(e.target.checked)} className="accent-accent-500" />
+          Cloud only
+        </label>
       </div>
 
       {state.status === 'error' && (

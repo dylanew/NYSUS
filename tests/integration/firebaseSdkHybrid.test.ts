@@ -78,4 +78,14 @@ describe('Firebase AI Logic hybrid routing (real SDK)', () => {
     expect(r.record.source).toBe('in_cloud')
     expect(await probeOnDeviceAvailability()).toBe('unsupported')
   })
+  it('cloud only mode reaches Gemini even when Chrome reports available', async () => {
+    const lm = fakeLanguageModel('available')
+    g.LanguageModel = lm
+    const fetchSpy = mockCloud()
+    const models = setup()
+    const r = await extractPreferences('x', { hybrid: models.hybrid, cloudOnly: models.cloudOnly }, { forceCloud: true })
+    expect(r.record.source).toBe('in_cloud')
+    expect(lm.prompt).not.toHaveBeenCalled()
+    expect(fetchSpy).toHaveBeenCalledOnce()
+  })
 })

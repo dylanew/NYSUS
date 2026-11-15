@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { describeInference } from '../../src/services/ai/inferenceMetadata'
+import { explainError } from '../../src/services/ai/errors'
 import { probeOnDeviceAvailability } from '../../src/services/ai/onDeviceAvailability'
 
 describe('describeInference', () => {
@@ -12,6 +13,14 @@ describe('describeInference', () => {
     expect(describeInference({ source: 'in_cloud', onDeviceAvailability: 'unsupported' }).label).toBe('Local model unavailable — using cloud fallback')
     expect(describeInference({ source: 'in_cloud', onDeviceAvailability: 'downloading' }).tone).toBe('fallback')
     expect(describeInference({ source: 'in_cloud', onDeviceAvailability: 'available', onDeviceError: 'boom' }).label).toMatch(/failed/)
+  })
+})
+
+describe('explainError', () => {
+  it('flags browser-level fetch failures', () => {
+    expect(explainError('AI: Error fetching from https://x: Type error (AI/error)')).toMatch(/blocked or dropped/)
+    expect(explainError('Firebase App Check token is invalid.')).toMatch(/debug token/)
+    expect(explainError('other')).toBe('other')
   })
 })
 

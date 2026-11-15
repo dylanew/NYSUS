@@ -25,6 +25,11 @@ export interface ExtractionResult {
 
 export const MAX_REQUEST_LENGTH = 500
 
+export interface ExtractOptions {
+  /** Skip on-device and use the ONLY_IN_CLOUD model, e.g. to demo the cloud path on a device that has Gemini Nano. */
+  forceCloud?: boolean
+}
+
 let counter = 0
 const nextId = () => `inf_${Date.now().toString(36)}_${(counter++).toString(36)}`
 
@@ -32,7 +37,7 @@ const nextId = () => `inf_${Date.now().toString(36)}_${(counter++).toString(36)}
  * Workflow A: single-turn structured extraction through Firebase AI Logic hybrid inference.
  * The SDK decides on-device vs cloud; we record what it reports in response.inferenceSource.
  */
-export async function extractPreferences(request: string, deps: HybridDeps): Promise<ExtractionResult> {
+export async function extractPreferences(request: string, deps: HybridDeps, options: ExtractOptions = {}): Promise<ExtractionResult> {
   const text = request.trim()
   if (!text) throw new Error('Describe what you would like to watch.')
   if (text.length > MAX_REQUEST_LENGTH) throw new Error(`Keep requests under ${MAX_REQUEST_LENGTH} characters.`)
@@ -44,13 +49,18 @@ export async function extractPreferences(request: string, deps: HybridDeps): Pro
 
   let result: GenerateContentResult
   let onDeviceError: string | undefined
-  try {
-    result = await deps.hybrid.generateContent(prompt)
-  } catch (err) {
-    // Only retry in the cloud if the on-device path was the one that failed.
-    if (availability !== 'available') throw err
-    onDeviceError = err instanceof Error ? err.message : String(err)
+  const requestedMode = options.forceCloud ? 'only_in_cloud' : 'prefer_on_device'
+  if (options.forceCloud) {
     result = await deps.cloudOnly.generateContent(prompt)
+  } else {
+    try {
+      result = await deps.hybrid.generateContent(prompt)
+    } catch (err) {
+      // Only retry in the cloud if the on-device path was the one that failed.
+      if (availability !== 'available') throw err
+      onDeviceError = err instanceof Error ? err.message : String(err)
+      result = await deps.cloudOnly.generateContent(prompt)
+    }
   }
 
   const source: InferenceSource | undefined = onDeviceError ? 'in_cloud' : result.response.inferenceSource
@@ -66,6 +76,7 @@ export async function extractPreferences(request: string, deps: HybridDeps): Pro
       id: nextId(),
       task: 'extract_preferences',
       source,
+      requestedMode,
       onDeviceAvailability: availability,
       onDeviceError,
       latencyMs: Math.round(now() - started),

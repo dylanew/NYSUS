@@ -66,4 +66,12 @@ describe('extractPreferences', () => {
     await expect(extractPreferences('a'.repeat(501), deps)).rejects.toThrow(/under 500/)
     expect(hybrid.generateContent).not.toHaveBeenCalled()
   })
+  it('cloud only mode skips the hybrid model and says so', async () => {
+    const hybrid = fakeModel(VALID_JSON, 'on_device')
+    const cloudOnly = fakeModel(VALID_JSON, 'in_cloud')
+    const r = await extractPreferences('x', { ...base, hybrid, cloudOnly, probe: async () => 'available' }, { forceCloud: true })
+    expect(hybrid.generateContent).not.toHaveBeenCalled()
+    expect(r.record.source).toBe('in_cloud')
+    expect(r.record.requestedMode).toBe('only_in_cloud')
+  })
 })
