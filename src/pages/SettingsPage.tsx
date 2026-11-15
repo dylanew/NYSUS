@@ -42,6 +42,16 @@ export function SettingsPage() {
           {probe === 'running' ? 'Requesting a token…' : probe === null ? '' : probe.ok ? 'App Check token issued ✓' : probe.reason}
         </span>
       </div>
+      {probe && probe !== 'running' && probe.ok && (
+        <dl className="space-y-1 border-b border-ink-800 py-3 text-xs text-ink-300" data-testid="appcheck-diagnostics">
+          <div>Token app: <span className="text-ink-100">{probe.claims?.appId ?? 'unknown'}</span>{' '}
+            {probe.claims?.appId && probe.claims.appId !== services?.app.options.appId && <span className="text-danger">(does not match this app's appId {services?.app.options.appId})</span>}
+          </div>
+          <div>Token audience: <span className="text-ink-100">{probe.claims?.audience.join(', ') || 'unknown'}</span></div>
+          <div>Token expires: <span className="text-ink-100">{probe.claims?.expiresAt ?? 'unknown'}</span></div>
+          <div>Cloud check: <span className={probe.cloud.includes('succeeded') ? 'text-local' : 'text-danger'}>{probe.cloud}</span></div>
+        </dl>
+      )}
       <Row label="Cloud model (fallback)" value={services?.cloudModel ?? DEFAULT_CLOUD_MODEL} ok />
       {!config.ok && (
         <p className="mt-6 text-sm text-ink-300">

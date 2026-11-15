@@ -35,4 +35,10 @@ describe('readFirebaseConfig', () => {
     const r = readFirebaseConfig({ ...full, VITE_APPCHECK_DEBUG_TOKEN: '1a2b3c4d-0000-4000-8000-000000000000' })
     expect(r.ok && r.appCheck).toMatchObject({ debug: true, debugToken: '1a2b3c4d-0000-4000-8000-000000000000' })
   })
+  it('decodes App Check token claims without needing a secret', async () => {
+    const { decodeAppCheckClaims } = await import('../../src/services/firebase/app')
+    const payload = btoa(JSON.stringify({ sub: '1:2:web:3', aud: ['projects/123', 'projects/demo'], exp: 1_800_000_000 }))
+    expect(decodeAppCheckClaims(`h.${payload}.s`)).toEqual({ appId: '1:2:web:3', audience: ['projects/123', 'projects/demo'], expiresAt: '2027-01-15T08:00:00.000Z' })
+    expect(decodeAppCheckClaims('garbage')).toBeNull()
+  })
 })
