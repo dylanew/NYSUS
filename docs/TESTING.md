@@ -24,3 +24,4 @@ Playwright end-to-end tests are planned once the Phase 2–4 user journeys exist
 | Date | Environment | Path | Result |
 |---|---|---|---|
 | 15 Nov 2026 | macOS, Chrome desktop, Prompt API flag on, App Check debug token | On-device (`on_device`) | Correct structured preferences for "A psychological thriller with a clever plot from the last ten years" (genre, mood, theme, 2016–2026, film). First request 25.6 s, which includes loading the model into memory. |
+| 15 Nov 2026 | Same, model warm | On-device | "A short, light-hearted series I can finish this weekend": first attempt failed validation (`releaseAfter: 0`), fixed in prompt v2 + schema. Retry 7.6 s, correct mood/type but **invented a 2020–2027 release period** the request never stated. Extraction quality to be addressed with the Phase 2 evaluation set. |
