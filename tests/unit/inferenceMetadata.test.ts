@@ -19,7 +19,7 @@ describe('describeInference', () => {
 describe('explainError', () => {
   it('flags browser-level fetch failures', () => {
     expect(explainError('AI: Error fetching from https://x: Type error (AI/error)')).toMatch(/blocked or dropped/)
-    expect(explainError('Firebase App Check token is invalid.')).toMatch(/debug token/)
+    expect(explainError('Firebase App Check token is invalid.')).toMatch(/Test App Check/)
     expect(explainError('other')).toBe('other')
   })
 })

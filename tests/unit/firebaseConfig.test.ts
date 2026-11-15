@@ -19,7 +19,7 @@ describe('readFirebaseConfig', () => {
     expect(r.ok).toBe(true)
     if (!r.ok) return
     expect(r.options.projectId).toBe('demo')
-    expect(r.appCheck).toEqual({ recaptchaEnterpriseSiteKey: 'site', debug: true })
+    expect(r.appCheck).toEqual({ recaptchaEnterpriseSiteKey: 'site', debug: true, debugToken: null })
     expect(r.cloudModel).toBeNull()
   })
 
@@ -30,5 +30,9 @@ describe('readFirebaseConfig', () => {
   it('rejects values with characters that cannot go in an HTTP header', () => {
     const r = readFirebaseConfig({ ...full, VITE_FIREBASE_API_KEY: 'AIza\u200Bkey', VITE_APPCHECK_RECAPTCHA_ENTERPRISE_SITE_KEY: '6L\u2019x' })
     expect(r).toEqual({ ok: false, missing: [], invalid: ['VITE_FIREBASE_API_KEY', 'VITE_APPCHECK_RECAPTCHA_ENTERPRISE_SITE_KEY'] })
+  })
+  it('uses a console-generated debug token when provided', () => {
+    const r = readFirebaseConfig({ ...full, VITE_APPCHECK_DEBUG_TOKEN: '1a2b3c4d-0000-4000-8000-000000000000' })
+    expect(r.ok && r.appCheck).toMatchObject({ debug: true, debugToken: '1a2b3c4d-0000-4000-8000-000000000000' })
   })
 })

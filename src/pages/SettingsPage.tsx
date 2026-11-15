@@ -1,4 +1,5 @@
-import { getFirebase } from '../services/firebase/app'
+import { useState } from 'react'
+import { getFirebase, probeAppCheck, type AppCheckProbe } from '../services/firebase/app'
 import { DEFAULT_CLOUD_MODEL } from '../services/ai/firebaseAI'
 
 function Row({ label, value, ok }: { label: string; value: string; ok: boolean }) {
@@ -12,6 +13,11 @@ function Row({ label, value, ok }: { label: string; value: string; ok: boolean }
 
 export function SettingsPage() {
   const { config, services } = getFirebase()
+  const [probe, setProbe] = useState<AppCheckProbe | 'running' | null>(null)
+  const runProbe = async () => {
+    setProbe('running')
+    setProbe(await probeAppCheck())
+  }
   return (
     <section className="max-w-2xl">
       <h1 className="text-2xl font-semibold">Settings</h1>
@@ -28,6 +34,14 @@ export function SettingsPage() {
         value={services ? { 'recaptcha-enterprise': 'reCAPTCHA Enterprise', debug: 'Debug token (dev only)', disabled: 'Not configured' }[services.appCheckMode] : 'Not configured'}
         ok={services?.appCheckMode !== 'disabled' && !!services}
       />
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-ink-800 py-3 text-sm">
+        <button type="button" onClick={() => void runProbe()} className="rounded-md border border-ink-700 px-3 py-1 text-ink-100 hover:border-accent-400">
+          Test App Check
+        </button>
+        <span role="status" className={probe && probe !== 'running' && !probe.ok ? 'text-danger' : 'text-ink-100'}>
+          {probe === 'running' ? 'Requesting a token…' : probe === null ? '' : probe.ok ? 'App Check token issued ✓' : probe.reason}
+        </span>
+      </div>
       <Row label="Cloud model (fallback)" value={services?.cloudModel ?? DEFAULT_CLOUD_MODEL} ok />
       {!config.ok && (
         <p className="mt-6 text-sm text-ink-300">

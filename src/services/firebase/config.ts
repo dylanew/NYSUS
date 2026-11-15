@@ -25,6 +25,8 @@ export const REQUIRED_FIREBASE_ENV = [
 export interface AppCheckEnv {
   recaptchaEnterpriseSiteKey: string | null
   debug: boolean
+  /** A debug token generated in the Firebase console (dev only). Takes precedence over auto-generated tokens. */
+  debugToken: string | null
 }
 
 export type FirebaseConfigResult =
@@ -69,7 +71,8 @@ export function readFirebaseConfig(env: Env = import.meta.env): FirebaseConfigRe
     },
     appCheck: {
       recaptchaEnterpriseSiteKey: clean.VITE_APPCHECK_RECAPTCHA_ENTERPRISE_SITE_KEY ?? null,
-      debug: clean.VITE_APPCHECK_DEBUG === 'true',
+      debug: clean.VITE_APPCHECK_DEBUG === 'true' || !!clean.VITE_APPCHECK_DEBUG_TOKEN,
+      debugToken: clean.VITE_APPCHECK_DEBUG_TOKEN ?? null,
     },
     cloudModel: clean.VITE_GEMINI_CLOUD_MODEL ?? null,
   }

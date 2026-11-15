@@ -4,7 +4,7 @@ export function explainError(message: string): string {
     return `${message}. The browser blocked or dropped the request before Firebase answered (content blocker, privacy relay, VPN or offline).`
   }
   if (/App Check token is invalid/i.test(message)) {
-    return `${message}. Register this browser's App Check debug token in the Firebase console.`
+    return `${message}. This browser has no valid App Check token. Use Settings → Test App Check to see why.`
   }
   return message
 }
