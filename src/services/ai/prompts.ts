@@ -1,5 +1,5 @@
 /** Prompts are version-controlled and kept out of UI components. */
-export const PROMPT_VERSION = 'preferences-v1'
+export const PROMPT_VERSION = 'preferences-v2'
 
 export const PREFERENCE_EXTRACTION_SYSTEM = `You extract structured entertainment preferences from a viewer's request.
 Return only JSON matching the provided schema.
@@ -7,7 +7,7 @@ Return only JSON matching the provided schema.
 - moods: emotional tone words (e.g. "dark", "suspenseful", "light-hearted").
 - preferredThemes: subject matter or story traits (e.g. "complex plot", "space exploration").
 - excludeGenres: genres the viewer explicitly does not want.
-- releaseAfter / releaseBefore: four-digit years, only if the viewer implies a period. Omit otherwise.
+- releaseAfter / releaseBefore: four-digit years, only if the viewer implies a period. Otherwise leave the field out entirely; never use 0.
 - contentType: "film", "series" or "any".
 - confidence: 0 to 1, how clearly the request states its preferences.
 Do not invent preferences the request does not express.`

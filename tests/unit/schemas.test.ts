@@ -40,6 +40,16 @@ describe('parsePreferences', () => {
     expect(() => parsePreferences(JSON.stringify({ ...valid, releaseAfter: 2020, releaseBefore: 2010 }))).toThrow(/releaseAfter/)
   })
 
+  it('treats 0 or null years as "no preference" (seen from Gemini Nano)', () => {
+    const p = parsePreferences(JSON.stringify({ ...valid, releaseAfter: 0, releaseBefore: null }))
+    expect(p.releaseAfter).toBeUndefined()
+    expect(p.releaseBefore).toBeUndefined()
+  })
+
+  it('still rejects implausible non-placeholder years', () => {
+    expect(() => parsePreferences(JSON.stringify({ ...valid, releaseAfter: 16 }))).toThrow(StructuredOutputError)
+  })
+
   it('rejects an unknown content type', () => {
     expect(() => parsePreferences(JSON.stringify({ ...valid, contentType: 'podcast' }))).toThrow(StructuredOutputError)
   })

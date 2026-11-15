@@ -72,9 +72,15 @@ export function DiscoveryPrompt(props: {
       </div>
 
       {state.status === 'error' && (
-        <p role="alert" className="mt-5 rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
+        <div role="alert" className="mt-5 rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
           {state.message}
-        </p>
+          {state.raw && (
+            <details className="mt-2 text-xs text-ink-300">
+              <summary className="cursor-pointer">What the model returned</summary>
+              <pre className="mt-2 overflow-x-auto whitespace-pre-wrap">{state.raw}</pre>
+            </details>
+          )}
+        </div>
       )}
 
       {state.status === 'success' && (

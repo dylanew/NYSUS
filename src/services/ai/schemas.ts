@@ -25,7 +25,16 @@ export const preferenceJsonSchema = {
 } as const
 
 const label = z.string().trim().min(1).max(60).transform((s) => s.toLowerCase())
-const year = z.number().int().min(1900).max(2100)
+/**
+ * The small on-device model sometimes fills an optional year with 0 (or null) to mean
+ * "no preference" instead of omitting it. Placeholders that cannot be a release year
+ * are treated as absent; anything else must be a real four-digit year.
+ */
+const YEAR_PLACEHOLDERS = new Set<unknown>([null, 0, ''])
+const year = z.preprocess(
+  (v) => (YEAR_PLACEHOLDERS.has(v) ? undefined : v),
+  z.number().int().min(1900).max(2100).optional(),
+)
 
 export const viewerPreferencesSchema = z
   .object({
@@ -33,8 +42,8 @@ export const viewerPreferencesSchema = z
     moods: z.array(label).max(10),
     preferredThemes: z.array(label).max(10),
     excludeGenres: z.array(label).max(10),
-    releaseAfter: year.optional(),
-    releaseBefore: year.optional(),
+    releaseAfter: year,
+    releaseBefore: year,
     contentType: z.enum(['film', 'series', 'any']),
     confidence: z.number().min(0).max(1),
   })
