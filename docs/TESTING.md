@@ -19,3 +19,8 @@ Automated tests cannot prove Gemini Nano runs on a given machine. With `.env.loc
 4. In another browser (or with the flag off) the same request should read *Local model unavailable — using cloud fallback*.
 
 Playwright end-to-end tests are planned once the Phase 2–4 user journeys exist.
+
+### Results
+| Date | Environment | Path | Result |
+|---|---|---|---|
+| 15 Nov 2026 | macOS, Chrome desktop, Prompt API flag on, App Check debug token | On-device (`on_device`) | Correct structured preferences for "A psychological thriller with a clever plot from the last ten years" (genre, mood, theme, 2016–2026, film). First request 25.6 s, which includes loading the model into memory. |
