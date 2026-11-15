@@ -16,7 +16,13 @@ export function SettingsPage() {
     <section className="max-w-2xl">
       <h1 className="text-2xl font-semibold">Settings</h1>
       <h2 className="mt-8 text-sm font-medium uppercase tracking-wider text-ink-500">Firebase</h2>
-      <Row label="Web app config" value={config.ok ? `Project ${config.options.projectId}` : `Missing ${config.missing.join(', ')}`} ok={config.ok} />
+      <Row label="Web app config" value={
+          config.ok
+            ? `Project ${config.options.projectId}`
+            : config.invalid.length > 0
+              ? `Hidden or non-ASCII characters in ${config.invalid.join(', ')}`
+              : `Missing ${config.missing.join(', ')}`
+        } ok={config.ok} />
       <Row
         label="App Check"
         value={services ? { 'recaptcha-enterprise': 'reCAPTCHA Enterprise', debug: 'Debug token (dev only)', disabled: 'Not configured' }[services.appCheckMode] : 'Not configured'}

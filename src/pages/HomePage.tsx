@@ -18,7 +18,9 @@ export function HomePage() {
 
       {!config.ok && (
         <p className="rounded-lg border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn">
-          Firebase isn't configured, so AI features are off. <Link to="/settings" className="underline">See Settings</Link> for what's needed.
+          {config.invalid.length > 0
+            ? `Some Firebase settings contain hidden or non-ASCII characters (${config.invalid.join(', ')}), so AI features are off. Retype them in .env.local.`
+            : "Firebase isn't configured, so AI features are off."} <Link to="/settings" className="underline">See Settings</Link> for what's needed.
         </p>
       )}
 

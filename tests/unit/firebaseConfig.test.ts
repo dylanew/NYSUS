@@ -11,7 +11,7 @@ const full = {
 describe('readFirebaseConfig', () => {
   it('reports exactly which required values are missing', () => {
     const r = readFirebaseConfig({ VITE_FIREBASE_API_KEY: 'key', VITE_FIREBASE_PROJECT_ID: '  ' })
-    expect(r).toEqual({ ok: false, missing: ['VITE_FIREBASE_AUTH_DOMAIN', 'VITE_FIREBASE_PROJECT_ID', 'VITE_FIREBASE_APP_ID'] })
+    expect(r).toEqual({ ok: false, missing: ['VITE_FIREBASE_AUTH_DOMAIN', 'VITE_FIREBASE_PROJECT_ID', 'VITE_FIREBASE_APP_ID'], invalid: [] })
   })
 
   it('builds options and App Check settings when complete', () => {
@@ -26,5 +26,9 @@ describe('readFirebaseConfig', () => {
   it('treats App Check as off when no site key is given', () => {
     const r = readFirebaseConfig(full)
     expect(r.ok && r.appCheck.recaptchaEnterpriseSiteKey).toBeNull()
+  })
+  it('rejects values with characters that cannot go in an HTTP header', () => {
+    const r = readFirebaseConfig({ ...full, VITE_FIREBASE_API_KEY: 'AIza\u200Bkey', VITE_APPCHECK_RECAPTCHA_ENTERPRISE_SITE_KEY: '6L\u2019x' })
+    expect(r).toEqual({ ok: false, missing: [], invalid: ['VITE_FIREBASE_API_KEY', 'VITE_APPCHECK_RECAPTCHA_ENTERPRISE_SITE_KEY'] })
   })
 })

@@ -29,7 +29,14 @@ export interface AppCheckEnv {
 
 export type FirebaseConfigResult =
   | { ok: true; options: FirebaseOptions; appCheck: AppCheckEnv; cloudModel: string | null }
-  | { ok: false; missing: string[] }
+  | { ok: false; missing: string[]; invalid: string[] }
+
+/**
+ * Config values end up in HTTP headers (e.g. x-goog-api-key), which only accept
+ * ISO-8859-1. Copy-pasting can smuggle in invisible or typographic characters
+ * (zero-width spaces, smart quotes), which makes every cloud request fail in the browser.
+ */
+const PRINTABLE_ASCII = /^[\x21-\x7E]*$/
 
 type Env = Record<string, string | boolean | undefined>
 
@@ -40,10 +47,14 @@ const blankToUndefined = (env: Env): Record<string, string | undefined> =>
 
 export function readFirebaseConfig(env: Env = import.meta.env): FirebaseConfigResult {
   const clean = blankToUndefined(env)
+  const invalid = Object.keys(clean).filter(
+    (k) => k.startsWith('VITE_FIREBASE_') || k.startsWith('VITE_APPCHECK_') || k === 'VITE_GEMINI_CLOUD_MODEL',
+  ).filter((k) => clean[k] !== undefined && !PRINTABLE_ASCII.test(clean[k]!))
+  if (invalid.length > 0) return { ok: false, missing: [], invalid }
   const parsed = firebaseEnvSchema.safeParse(clean)
   if (!parsed.success) {
     const missing = REQUIRED_FIREBASE_ENV.filter((key) => !clean[key])
-    return { ok: false, missing }
+    return { ok: false, missing, invalid: [] }
   }
   const e = parsed.data
   return {
