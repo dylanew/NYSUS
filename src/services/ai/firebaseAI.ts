@@ -24,7 +24,10 @@ export function getFirebaseAI(): AI | null {
   if (ai) return ai
   const { services } = getFirebase()
   if (!services) return null
-  ai = getAI(services.app, { backend: new GoogleAIBackend() })
+  // Limited-use (replay-protected) App Check tokens: AI Logic rejects standard
+  // 1-hour tokens with "401 Firebase App Check token is invalid" when replay
+  // protection is enforced, which we hit live on 15 Nov 2026.
+  ai = getAI(services.app, { backend: new GoogleAIBackend(), useLimitedUseAppCheckTokens: true })
   return ai
 }
 

@@ -1,5 +1,5 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app'
-import { getToken, initializeAppCheck, ReCaptchaEnterpriseProvider, type AppCheck } from 'firebase/app-check'
+import { getLimitedUseToken, getToken, initializeAppCheck, ReCaptchaEnterpriseProvider, type AppCheck } from 'firebase/app-check'
 import { readFirebaseConfig, type FirebaseConfigResult } from './config'
 
 declare global {
@@ -85,8 +85,10 @@ export async function probeAppCheck(): Promise<AppCheckProbe> {
   if (!services) return { ok: false, reason: 'Firebase is not configured.' }
   if (!services.appCheck) return { ok: false, reason: 'App Check is not initialised: VITE_APPCHECK_RECAPTCHA_ENTERPRISE_SITE_KEY is missing.' }
   let token: string
+  let limitedToken: string
   try {
     token = (await getToken(services.appCheck, true)).token
+    limitedToken = (await getLimitedUseToken(services.appCheck)).token
   } catch (err) {
     return { ok: false, reason: err instanceof Error ? err.message : String(err) }
   }
@@ -97,17 +99,19 @@ export async function probeAppCheck(): Promise<AppCheckProbe> {
   const { options } = services.app
   const model = services.cloudModel ?? 'gemini-3.5-flash-lite'
   const url = `https://firebasevertexai.googleapis.com/v1beta/projects/${options.projectId}/models/${model}:generateContent`
-  let cloud: string
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': options.apiKey ?? '', 'X-Firebase-AppCheck': token },
-      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Reply with the single word OK.' }] }] }),
-    })
-    const body = (await res.json().catch(() => ({}))) as { error?: { message?: string } }
-    cloud = res.ok ? 'Direct AI Logic call succeeded' : `Direct AI Logic call failed: ${res.status} ${body.error?.message ?? ''}`
-  } catch (err) {
-    cloud = `Direct AI Logic call failed: ${err instanceof Error ? err.message : String(err)}`
+  const call = async (appCheckToken: string): Promise<string> => {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': options.apiKey ?? '', 'X-Firebase-AppCheck': appCheckToken },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Reply with the single word OK.' }] }] }),
+      })
+      const body = (await res.json().catch(() => ({}))) as { error?: { message?: string } }
+      return res.ok ? 'succeeded' : `failed: ${res.status} ${body.error?.message ?? ''}`
+    } catch (err) {
+      return `failed: ${err instanceof Error ? err.message : String(err)}`
+    }
   }
+  const cloud = `Standard token ${await call(token)} · Limited-use token ${await call(limitedToken)}`
   return { ok: true, mode: services.appCheckMode, claims, cloud }
 }

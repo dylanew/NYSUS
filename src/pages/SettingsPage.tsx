@@ -49,7 +49,7 @@ export function SettingsPage() {
           </div>
           <div>Token audience: <span className="text-ink-100">{probe.claims?.audience.join(', ') || 'unknown'}</span></div>
           <div>Token expires: <span className="text-ink-100">{probe.claims?.expiresAt ?? 'unknown'}</span></div>
-          <div>Cloud check: <span className={probe.cloud.includes('succeeded') ? 'text-local' : 'text-danger'}>{probe.cloud}</span></div>
+          <div>Cloud check: <span className={probe.cloud.includes('Limited-use token succeeded') ? 'text-local' : 'text-danger'}>{probe.cloud}</span></div>
         </dl>
       )}
       <Row label="Cloud model (fallback)" value={services?.cloudModel ?? DEFAULT_CLOUD_MODEL} ok />

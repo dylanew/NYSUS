@@ -40,6 +40,7 @@ Checked against the [hybrid docs](https://firebase.google.com/docs/ai-logic/hybr
 | Risk | Impact | Mitigation |
 |---|---|---|
 | App Check is **mandatory** for AI Logic from 2 Nov 2026 (already in force). | Without it, every cloud call fails. | reCAPTCHA Enterprise + dev debug token wired in `services/firebase/app.ts`. Needs keys from the project owner. |
+| Standard (1-hour) App Check tokens rejected by AI Logic with `401 Firebase App Check token is invalid`, although the token's app and audience were correct (seen live). | Every cloud call fails. | `getAI(..., { useLimitedUseAppCheckTokens: true })` (replay-protected tokens). Settings → *Test App Check* compares both token types against the endpoint. |
 | Judges' browsers mostly won't have Gemini Nano ready (Chrome 139+ desktop, flag, multi-GB download). | Most demos will show cloud fallback. | Honest badge; "Prepare on-device model" button; record demo video on a prepared machine. |
 | Chrome Prompt API honours JSON Schema loosely; small model may produce weaker extractions. | Lower-quality preferences on-device. | Simple schema (no nulls/unions), Zod validation, low temperature in cloud, evaluation set in Phase 2. |
 | `firebase` and Prompt API are fast-moving. | API shape drift. | Pinned via lockfile; SDK-level integration test catches routing changes. |
