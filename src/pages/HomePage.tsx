@@ -1,16 +1,28 @@
-import { useMemo } from 'react'
-import { Link } from 'react-router'
-import { DiscoveryPrompt } from '../components/ai/DiscoveryPrompt'
-import { getPreferenceModels } from '../services/ai/firebaseAI'
+import { Link, useNavigate } from 'react-router'
+import { MessageSquare } from 'lucide-react'
+import { DiscoveryForm } from '../components/ai/DiscoveryForm'
+import { MediaCard, MediaGrid } from '../components/media/MediaCard'
+import { useAiDeps } from '../hooks/useAiDeps'
+import { useWatchlist } from '../hooks/useWatchlist'
+import { allTitles, getTitle } from '../services/catalogue/catalogue'
+import { rankTitles } from '../services/recommendations/ranking'
 import { getFirebase } from '../services/firebase/app'
+import type { MediaTitle } from '../types/media'
+
+const FEATURED = ['severance', 'arrival', 'parasite'].map(getTitle).filter((t): t is MediaTitle => t !== undefined)
+
+const NO_PREFS = { genres: [], moods: [], preferredThemes: [], excludeGenres: [], contentType: 'any' as const, length: 'any' as const, confidence: 1 }
 
 export function HomePage() {
-  const models = useMemo(() => getPreferenceModels(), [])
-  const deps = useMemo(() => (models ? { hybrid: models.hybrid, cloudOnly: models.cloudOnly } : null), [models])
+  const { deviceModel } = useAiDeps()
+  const navigate = useNavigate()
+  const { items, profile } = useWatchlist()
   const { config } = getFirebase()
+  const saved = new Set(items.map((i) => i.titleId))
+  const recommended = profile ? rankTitles(allTitles().filter((t) => !saved.has(t.id)), { preferences: NO_PREFS, profile }, 3) : []
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       <section>
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Good to see you.</h1>
         <p className="mt-2 max-w-xl text-ink-300">Tell NYSUS what you feel like watching. It reads your request on this device when it can.</p>
@@ -19,17 +31,49 @@ export function HomePage() {
       {!config.ok && (
         <p className="rounded-lg border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn">
           {config.invalid.length > 0
-            ? `Some Firebase settings contain hidden or non-ASCII characters (${config.invalid.join(', ')}), so AI features are off. Retype them in .env.local.`
-            : "Firebase isn't configured, so AI features are off."} <Link to="/settings" className="underline">See Settings</Link> for what's needed.
+            ? `Some Firebase settings contain hidden or non-ASCII characters (${config.invalid.join(', ')}). Retype them in .env.local.`
+            : "Firebase isn't configured, so discovery uses keyword matching."}{' '}
+          <Link to="/settings" className="underline">See Settings</Link>.
         </p>
       )}
 
-      <DiscoveryPrompt deps={deps} deviceModel={models?.hybrid ?? null} />
+      <DiscoveryForm
+        deviceModel={deviceModel}
+        onSubmit={(q, { forceCloud }) => navigate(`/discover?${new URLSearchParams({ q, ...(forceCloud ? { cloud: '1' } : {}) })}`)}
+      />
 
       <section>
-        <h2 className="text-lg font-medium">Featured</h2>
-        <p className="mt-1 text-sm text-ink-500">The catalogue and recommendations arrive in Phase 2.</p>
+        <h2 className="mb-3 text-lg font-medium">Featured</h2>
+        <MediaGrid>
+          {FEATURED.map((t) => (
+            <MediaCard key={t.id} title={t} />
+          ))}
+        </MediaGrid>
       </section>
+
+      <section>
+        <h2 className="mb-1 text-lg font-medium">Recommended for you</h2>
+        {recommended.length > 0 ? (
+          <>
+            <p className="mb-3 text-sm text-ink-500">Based on {items.length} saved title{items.length === 1 ? '' : 's'}.</p>
+            <MediaGrid>
+              {recommended.map((r) => (
+                <MediaCard key={r.title.id} title={r.title} explanation={r.explanation} />
+              ))}
+            </MediaGrid>
+          </>
+        ) : (
+          <p className="text-sm text-ink-500">Save or watch a few titles and recommendations will appear here.</p>
+        )}
+      </section>
+
+      <Link to="/assistant" className="flex items-center gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-5 hover:border-ink-700">
+        <MessageSquare className="size-5 text-accent-400" aria-hidden />
+        <span>
+          <span className="block font-medium">Streaming assistant</span>
+          <span className="text-sm text-ink-500">Ask why a stream is buffering. Arrives in Phase 4.</span>
+        </span>
+      </Link>
     </div>
   )
 }

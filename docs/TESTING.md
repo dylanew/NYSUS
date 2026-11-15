@@ -9,7 +9,18 @@
 | `tests/unit/inferenceMetadata.test.ts` | Badge wording never claims local unless the SDK said `on_device`; Prompt API probing |
 | `tests/integration/hybridInference.test.ts` | `extractPreferences` with fake models: on-device, cloud fallback, on-device failure retry, missing source, input limits |
 | `tests/integration/firebaseSdkHybrid.test.ts` | **Real `firebase/ai` SDK** with a faked `window.LanguageModel` and `fetch`: on-device routing passes our schema as `responseConstraint`; `downloadable` and no-Prompt-API cases go to `gemini-3.5-flash-lite` with `responseJsonSchema` |
-| `tests/integration/DiscoveryPrompt.test.tsx` | UI shows extracted preferences and the honest source label; unconfigured state |
+| `tests/unit/catalogue.test.ts` | Catalogue integrity (size, unique ids, controlled vocabulary), synonyms, "like X" detection |
+| `tests/unit/guards.test.ts` | Time-cue detection; dropping invented release periods (the live Gemini Nano case) and unsupported exclusions |
+| `tests/unit/ranking.test.ts` | Determinism, explanations, hard filters, similarity, era decay and hard filter, taste profile |
+| `tests/unit/keywordAndWatchlist.test.ts` | Keyword fallback; watchlist persistence, corrupt and blocked storage |
+| `tests/integration/discover.test.ts` | Journey A end to end with fake models: guard notes, reference titles, labelled keyword fallback |
+| `tests/integration/DiscoverPage.test.tsx` | Search → explained results → add to watchlist → mark watched; filter browsing |
+| `tests/eval/discoveryEval.test.ts` | Evaluation set: 6 requests (3 with recorded live model output) with expected and forbidden recommendations |
+
+## Evaluation
+`tests/eval/discoveryEval.test.ts` checks the deterministic half of discovery: given what a model extracted, do the top results match intent? Three cases use model outputs recorded in the live runs below; three are hand-written.
+
+**Limitations:** six cases is a smoke test, not a benchmark. Expected titles are one person's judgement. Live extraction quality (what the models return for a request) is not covered automatically because tests must not depend on live Gemini responses; it is checked manually and logged below. Building it out to cover more prompts was the first eval finding: it exposed weak era and length handling, which led to stated periods becoming hard filters and "short" being weighted properly.
 
 ## Manual verification of live hybrid inference
 Automated tests cannot prove Gemini Nano runs on a given machine. With `.env.local` configured:
@@ -18,7 +29,7 @@ Automated tests cannot prove Gemini Nano runs on a given machine. With `.env.loc
 3. Submit a request; badge should read *Processed on your device*.
 4. In another browser (or with the flag off) the same request should read *Local model unavailable — using cloud fallback*.
 
-Playwright end-to-end tests are planned once the Phase 2–4 user journeys exist.
+Playwright end-to-end tests are planned once the Phase 3–4 player and assistant journeys exist; the Discover → Watchlist journey is covered by a React Testing Library integration test meanwhile.
 
 ### Results
 | Date | Environment | Path | Result |

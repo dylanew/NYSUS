@@ -1,5 +1,5 @@
 /** Prompts are version-controlled and kept out of UI components. */
-export const PROMPT_VERSION = 'preferences-v2'
+export const PROMPT_VERSION = 'preferences-v3'
 
 export const PREFERENCE_EXTRACTION_SYSTEM = `You extract structured entertainment preferences from a viewer's request.
 Return only JSON matching the provided schema.
@@ -9,6 +9,7 @@ Return only JSON matching the provided schema.
 - excludeGenres: genres the viewer explicitly does not want.
 - releaseAfter / releaseBefore: four-digit years, only if the viewer implies a period. Otherwise leave the field out entirely; never use 0.
 - contentType: "film", "series" or "any".
+- length: "short" if the viewer wants something quick or finishable soon (e.g. "short", "over the weekend", "quick watch"), "long" for epics or long series, otherwise "any".
 - confidence: 0 to 1, how clearly the request states its preferences.
 Do not invent preferences the request does not express.`
 

@@ -8,15 +8,29 @@ src/
   components/
     layout/     AppLayout (sidebar / mobile nav), Wordmark, nav items
     ai/         DiscoveryPrompt, InferenceBadge, PreferenceResult, DeviceModelStatus
-  hooks/        usePreferenceExtraction, useOnDeviceModel
-  pages/        HomePage, SettingsPage, PlaceholderPage (later phases)
+    media/      MediaCard, Artwork (generated), WatchlistButton, FilterChips
+  data/         catalogue.ts (48 curated films and series)
+  hooks/        useAiDeps, useDiscovery, useOnDeviceModel, useWatchlist
+  pages/        Home, Discover, Watchlist, Title, Settings, Placeholder (later phases)
+  types/        media.ts
   services/
     firebase/   config.ts (env → validated options), app.ts (initializeApp + App Check)
     ai/         firebaseAI.ts, hybridInference.ts, schemas.ts, prompts.ts,
-                inferenceMetadata.ts, onDeviceAvailability.ts
+                inferenceMetadata.ts, onDeviceAvailability.ts, errors.ts
+    catalogue/  vocabulary.ts (controlled tags + synonyms), catalogue.ts (lookup, "like X" detection)
+    recommendations/
+                discover.ts (Journey A pipeline), guards.ts, ranking.ts, keywordExtraction.ts
+    watchlist/  watchlistStore.ts (localStorage, swappable for Firestore in Phase 5)
 tests/
   unit/         pure logic
   integration/  services + components, including the real firebase/ai SDK with faked Chrome/network
+  eval/         discovery evaluation set (recorded live model outputs → expected recommendations)
+
+## Journey A pipeline
+request → `extractPreferences` (hybrid AI, or keyword fallback if AI is unavailable)
+→ `sanitisePreferences` (drop what the request doesn't support)
+→ `findMentionedTitle` ("like Interstellar")
+→ `rankTitles` (hard filters, weighted scores, explanations from metadata)
 ```
 
 ## Principles
@@ -25,4 +39,4 @@ tests/
 - **Lazy, singleton initialisation** of the Firebase app, App Check and AI models.
 
 ## Planned additions (later phases)
-`services/catalogue`, `services/recommendations`, `services/playback`, `services/diagnostics`, `services/ai/cloudAssistant.ts`, `data/catalogue.ts`, `data/demoScenarios.ts`, Recharts dashboards, Firestore persistence.
+`services/playback`, `services/diagnostics`, `services/ai/cloudAssistant.ts`, `data/demoScenarios.ts`, Recharts dashboards, Firestore persistence.

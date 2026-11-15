@@ -14,6 +14,6 @@ export default defineConfig({
     // on-device (Chrome Prompt API) adapter, so hybrid routing could not be exercised.
     alias: { '@firebase/ai': fileURLToPath(new URL('./node_modules/@firebase/ai/dist/esm/index.esm.js', import.meta.url)) },
     server: { deps: { inline: [/firebase/] } },
-    include: ['tests/unit/**/*.test.{ts,tsx}', 'tests/integration/**/*.test.{ts,tsx}'],
+    include: ['tests/unit/**/*.test.{ts,tsx}', 'tests/integration/**/*.test.{ts,tsx}', 'tests/eval/**/*.test.{ts,tsx}'],
   },
 })

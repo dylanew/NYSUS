@@ -15,8 +15,8 @@ NYSUS answers two connected questions: *what should I watch?* and *is my viewing
 The inference source shown in the UI must come from the SDK's `response.inferenceSource`, never be assumed.
 
 ## Phases (deadline 30 Nov 2026, 22:00 GMT)
-1. **Foundation and hybrid inference** — scaffold, shell, Firebase + App Check, real hybrid call with source shown. *(this PR)*
-2. Entertainment discovery — catalogue, ranking, explanations, watchlist.
+1. **Foundation and hybrid inference** — scaffold, shell, Firebase + App Check, real hybrid call with source shown. *(done)*
+2. Entertainment discovery — catalogue, ranking, explanations, watchlist. *(done)*
 3. Streaming player and telemetry — deterministic scenarios, metrics, charts.
 4. Agentic assistant — six tools, validated function-calling loop, grounded reports.
 5. Persistence and polish — guest mode/auth, Firestore, responsive UI.
