@@ -1,7 +1,11 @@
+import { THEME } from '../../theme/tokens'
 import type { PlaybackSession } from '../../types/playback'
 
-/** Validated with the dataviz palette checker against the #111115 chart surface (dark). */
-export const SERIES = { throughput: '#199e70', bitrate: '#9085e9', buffer: '#3987e5' } as const
+/**
+ * Series colours on the warm ink-900 chart surface. Throughput (blue) and bitrate (butter) are
+ * paired on one chart, so they differ in hue and lightness and stay distinct with red-green colour blindness.
+ */
+export const SERIES = { throughput: '#4b9cf0', bitrate: THEME.butter, buffer: '#2fb383' } as const
 
 export interface ChartPoint {
   t: number
