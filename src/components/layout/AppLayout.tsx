@@ -12,7 +12,8 @@ export function AppLayout() {
     <div className="flex min-h-screen flex-col">
       <div aria-hidden className="popcorn-stripes h-1.5 shrink-0" />
       <div className="flex flex-1">
-        <aside className="hidden w-60 shrink-0 flex-col border-r border-ink-800 bg-ink-900 px-4 py-6 md:flex">
+        <aside className="relative hidden w-60 shrink-0 flex-col bg-ink-900 py-6 pl-4 pr-5.5 md:flex">
+          <div aria-hidden className="popcorn-stripes-y absolute inset-y-0 right-0 w-1.5" />
           <Wordmark className="px-3" />
           <nav aria-label="Main" className="mt-10 flex flex-col gap-1">
             {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
