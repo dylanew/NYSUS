@@ -1,11 +1,12 @@
 import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { BufferingIncident } from '../../services/diagnostics/buffering'
 import { formatClock } from '../../services/playback/metrics'
+import { THEME } from '../../theme/tokens'
 import { SERIES, type ChartPoint } from './chartData'
 
-const GRID = '#2a2a35'
-const AXIS = '#6b6b7b'
-const tooltipStyle = { background: '#16161c', border: `1px solid ${GRID}`, borderRadius: 8, fontSize: 12, color: '#ededf2' }
+const GRID = THEME.grid
+const AXIS = THEME.axis
+const tooltipStyle = { background: THEME.surfaceRaised, border: `1px solid ${GRID}`, borderRadius: 8, fontSize: 12, color: THEME.text }
 const tick = { fill: AXIS, fontSize: 11 }
 
 function stallAreas(incidents: BufferingIncident[], lastT: number) {
@@ -14,8 +15,8 @@ function stallAreas(incidents: BufferingIncident[], lastT: number) {
       key={i.startEventId}
       x1={i.startMs / 1000}
       x2={i.durationMs === null ? lastT : (i.startMs + i.durationMs) / 1000}
-      fill="#fbbf24"
-      fillOpacity={0.12}
+      fill={THEME.accent}
+      fillOpacity={0.14}
       stroke="none"
       ifOverflow="extendDomain"
     />
@@ -38,7 +39,7 @@ export function ThroughputChart({ points, incidents }: { points: ChartPoint[]; i
             formatter={(v, name) => [`${Number(v).toFixed(2)} Mbps`, name]}
             cursor={{ stroke: AXIS, strokeDasharray: '3 3' }}
           />
-          <Legend wrapperStyle={{ fontSize: 12, color: '#a3a3b2' }} />
+          <Legend wrapperStyle={{ fontSize: 12, color: THEME.textMuted }} />
           <Line type="monotone" dataKey="throughput" name="Throughput (network)" stroke={SERIES.throughput} strokeWidth={2} dot={false} isAnimationActive={false} />
           <Line type="stepAfter" dataKey="bitrate" name="Bitrate (video)" stroke={SERIES.bitrate} strokeWidth={2} dot={false} isAnimationActive={false} />
         </LineChart>

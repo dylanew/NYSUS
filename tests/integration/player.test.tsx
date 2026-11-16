@@ -56,7 +56,10 @@ describe('Player → Stream Health journey', () => {
     act(() => playerStore.skip(44))
 
     expect(screen.getByRole('alert')).toHaveTextContent(/waiting for the connection|Playback error/)
-    expect(screen.getByText(/Error: Network unreachable/)).toBeInTheDocument()
+    // Shown in the event timeline and as the viewport's recent-event callout.
+    expect(screen.getAllByText(/Error: Network unreachable/).length).toBeGreaterThan(0)
+    expect(screen.getByText('Connection lost')).toBeInTheDocument()
+    expect(screen.getByRole('meter', { name: 'Buffered video' })).toBeInTheDocument()
 
     await userEvent.click(screen.getAllByRole('link', { name: /Stream Health/ })[0]!)
     expect(await screen.findByText(/Playback error at 0:44/)).toBeInTheDocument()
