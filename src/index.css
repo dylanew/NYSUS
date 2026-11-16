@@ -77,15 +77,6 @@
   );
 }
 
-/* Vertical version, for edges such as the sidebar's. */
-@utility popcorn-stripes-y {
-  background-image: repeating-linear-gradient(
-    180deg,
-    var(--color-accent-500) 0 var(--stripe),
-    var(--color-cream) var(--stripe) calc(var(--stripe) * 2)
-  );
-}
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
