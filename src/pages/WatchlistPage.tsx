@@ -33,16 +33,18 @@ export function WatchlistPage() {
             <Link to="/discover" className="rounded-lg bg-accent-500 px-3 py-1.5 text-sm font-medium text-cream hover:bg-accent-600">
               Find something to watch
             </Link>
-            <button type="button" onClick={accountStore.loadDemoProfile} className="rounded-lg border border-ink-700 px-3 py-1.5 text-sm text-ink-100 hover:border-ink-500">
-              Load demo profile
-            </button>
+            {account.kind === 'guest' && (
+              <button type="button" onClick={() => accountStore.loadDemoProfile()} className="rounded-lg border border-ink-700 px-3 py-1.5 text-sm text-ink-100 hover:border-ink-500">
+                Load demo profile
+              </button>
+            )}
           </div>
         </div>
       ) : (
         <>
-          <List heading={`To watch (${toWatch.length})`} items={toWatch} onRemove={remove} onToggle={(id) => setWatched(id, true)} toggleLabel="Mark watched" />
+          <List demo={account.demoTitleIds} heading={`To watch (${toWatch.length})`} items={toWatch} onRemove={remove} onToggle={(id) => setWatched(id, true)} toggleLabel="Mark watched" />
           {watched.length > 0 && (
-            <List heading={`Watched (${watched.length})`} items={watched} onRemove={remove} onToggle={(id) => setWatched(id, false)} toggleLabel="Mark unwatched" />
+            <List demo={account.demoTitleIds} heading={`Watched (${watched.length})`} items={watched} onRemove={remove} onToggle={(id) => setWatched(id, false)} toggleLabel="Mark unwatched" />
           )}
         </>
       )}
@@ -52,6 +54,7 @@ export function WatchlistPage() {
 }
 
 function List(props: {
+  demo: string[]
   heading: string
   items: ReturnType<typeof useWatchlist>['items']
   onRemove: (id: string) => void
@@ -71,6 +74,11 @@ function List(props: {
               </Link>
               <p className="text-xs text-ink-500">
                 {title.year} · {formatDuration(title)}
+                {props.demo.includes(title.id) && (
+                  <span className="ml-2 rounded border border-butter/40 px-1.5 py-px text-[10px] uppercase tracking-wider text-butter" title="From the demo profile. Stays in guest mode.">
+                    Demo
+                  </span>
+                )}
               </p>
             </div>
             <button type="button" onClick={() => props.onToggle(title.id)} className="inline-flex items-center gap-1 rounded-md border border-ink-700 px-2 py-1 text-xs text-ink-300 hover:text-ink-100">

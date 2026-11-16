@@ -3,6 +3,10 @@ import { explainAuthError } from '../firebase/authErrors'
 import { startCloudSync, type SyncStatus, type SyncStores } from '../persistence/cloudSync'
 import type { RemoteRepo } from '../persistence/remoteRepo'
 import { DEMO_PROFILE } from '../../data/demoProfile'
+import { readJson, safeLocalStorage, writeJson, type KeyValueStorage } from '../persistence/localStorage'
+import type { WatchlistEntry } from '../watchlist/watchlistStore'
+
+const DEMO_KEY = 'nysus.demoTitles.v1'
 
 /**
  * Who is using NYSUS and where their data lives.
@@ -34,15 +38,20 @@ export interface AccountState {
   /** Last sign-in / sign-out error, for the account menu. */
   error: string | null
   canSignIn: boolean
+  /** Watchlist titles that came from the demo profile. They stay with the guest and never move to a Google account. */
+  demoTitleIds: string[]
 }
 
 export interface AccountDeps {
   auth: AuthAdapter | null
   repo: RemoteRepo | null
   stores: SyncStores
+  /** Where the list of demo-loaded titles is remembered; defaults to localStorage. */
+  storage?: KeyValueStorage | null
 }
 
-export function createAccountStore({ auth, repo, stores }: AccountDeps) {
+export function createAccountStore({ auth, repo, stores, storage = safeLocalStorage() }: AccountDeps) {
+  const savedDemo = readJson(storage, DEMO_KEY)
   let state: AccountState = {
     phase: auth ? 'starting' : 'ready',
     kind: 'guest',
@@ -52,6 +61,7 @@ export function createAccountStore({ auth, repo, stores }: AccountDeps) {
     busy: false,
     error: null,
     canSignIn: !!auth,
+    demoTitleIds: Array.isArray(savedDemo) ? savedDemo.filter((x): x is string => typeof x === 'string') : [],
   }
   const listeners = new Set<() => void>()
   let sync: ReturnType<typeof startCloudSync> | null = null
@@ -110,7 +120,35 @@ export function createAccountStore({ auth, repo, stores }: AccountDeps) {
     )
   }
 
+  function setDemo(ids: string[]) {
+    writeJson(storage, DEMO_KEY, ids)
+    set({ demoTitleIds: ids })
+  }
+
+  // A demo title the viewer removes is no longer demo data (if they add it back, it's theirs).
+  stores.watchlist.onChange((c) => {
+    if (c.type === 'remove' && state.demoTitleIds.includes(c.titleId)) setDemo(state.demoTitleIds.filter((id) => id !== c.titleId))
+  })
+
+  /** Takes the demo titles out of the watchlist (and so out of the guest's cloud space), returning them for undo. */
+  function removeDemoTitles(): WatchlistEntry[] {
+    const ids = new Set(state.demoTitleIds)
+    const removed = stores.watchlist.getSnapshot().filter((e) => ids.has(e.titleId))
+    for (const e of removed) stores.watchlist.remove(e.titleId)
+    setDemo([])
+    return removed
+  }
+
+  function restoreDemoTitles(entries: WatchlistEntry[]) {
+    for (const e of [...entries].reverse()) {
+      if (e.watched) stores.watchlist.setWatched(e.titleId, true)
+      else stores.watchlist.add(e.titleId)
+    }
+    setDemo(entries.map((e) => e.titleId))
+  }
+
   function clearLocal() {
+    setDemo([])
     stores.watchlist.clear()
     stores.preferences.clear()
     stores.sessions.clear()
@@ -126,11 +164,14 @@ export function createAccountStore({ auth, repo, stores }: AccountDeps) {
     async signInWithGoogle() {
       if (!auth || state.busy) return
       set({ busy: true, error: null })
+      // The demo profile belongs to guest mode: only what the guest added themselves moves to Google.
+      const demo = removeDemoTitles()
       try {
         const user = await auth.signInWithGoogle()
         if (user !== 'redirecting') setUser(user)
       } catch (err) {
         set({ error: explainAuthError(err) })
+        if (state.kind === 'guest') restoreDemoTitles(demo) // cancelled or failed: give the guest their demo back
       } finally {
         set({ busy: false })
       }
@@ -172,10 +213,20 @@ export function createAccountStore({ auth, repo, stores }: AccountDeps) {
 
     /** Fills the watchlist with a ready-made taste profile, so recommendations are personal straight away. */
     loadDemoProfile() {
+      if (state.kind !== 'guest') return
+      const added: string[] = []
       for (const { id, watched } of [...DEMO_PROFILE].reverse()) {
+        if (stores.watchlist.has(id)) continue // already the viewer's own: leave it theirs
         if (watched) stores.watchlist.setWatched(id, true)
         else stores.watchlist.add(id)
+        if (stores.watchlist.has(id)) added.push(id)
       }
+      setDemo([...new Set([...state.demoTitleIds, ...added])])
+    },
+
+    /** Removes the demo titles, leaving anything the guest added themselves. */
+    clearDemoProfile() {
+      removeDemoTitles()
     },
   }
 }

@@ -75,7 +75,7 @@ describe('account', () => {
   it('starts as a guest with a private cloud space when anonymous sign-in is enabled', async () => {
     const s = stores()
     const { repo, space } = memoryRepo()
-    const account = createAccountStore({ auth: fakeAuth().adapter, repo, stores: s })
+    const account = createAccountStore({ auth: fakeAuth().adapter, repo, stores: s, storage: null })
     await waitFor(() => expect(account.getSnapshot().storage).toBe('synced'))
     expect(account.getSnapshot()).toMatchObject({ kind: 'guest', phase: 'ready', user: { uid: 'anon1', isAnonymous: true } })
     account.loadDemoProfile()
@@ -86,20 +86,20 @@ describe('account', () => {
   })
 
   it('falls back to this browser when anonymous sign-in is disabled', async () => {
-    const account = createAccountStore({ auth: fakeAuth({ anonymousEnabled: false }).adapter, repo: memoryRepo().repo, stores: stores() })
+    const account = createAccountStore({ auth: fakeAuth({ anonymousEnabled: false }).adapter, repo: memoryRepo().repo, stores: stores(), storage: null })
     await waitFor(() => expect(account.getSnapshot().storageNote).toMatch(/Anonymous sign-in is not enabled/))
     expect(account.getSnapshot()).toMatchObject({ kind: 'guest', storage: 'device', canSignIn: true })
   })
 
   it('works with no Firebase at all', () => {
-    const account = createAccountStore({ auth: null, repo: null, stores: stores() })
+    const account = createAccountStore({ auth: null, repo: null, stores: stores(), storage: null })
     expect(account.getSnapshot()).toMatchObject({ phase: 'ready', kind: 'guest', storage: 'unavailable', canSignIn: false })
   })
 
   it('upgrading a guest to Google keeps the same space and data', async () => {
     const s = stores()
     const { repo, space } = memoryRepo()
-    const account = createAccountStore({ auth: fakeAuth().adapter, repo, stores: s })
+    const account = createAccountStore({ auth: fakeAuth().adapter, repo, stores: s, storage: null })
     await waitFor(() => expect(account.getSnapshot().storage).toBe('synced'))
     s.watchlist.add('arrival')
     await account.signInWithGoogle()
@@ -111,7 +111,7 @@ describe('account', () => {
   it('signing in to an existing Google account merges the guest data into it', async () => {
     const s = stores()
     const { repo, space } = memoryRepo({ g1: { watchlist: [{ titleId: 'moon', addedAt: 1_600_000_000_000, watched: false, updatedAt: 1_600_000_000_000 }] } })
-    const account = createAccountStore({ auth: fakeAuth({ existingGoogleUid: 'g1' }).adapter, repo, stores: s })
+    const account = createAccountStore({ auth: fakeAuth({ existingGoogleUid: 'g1' }).adapter, repo, stores: s, storage: null })
     await waitFor(() => expect(account.getSnapshot().storage).toBe('synced'))
     s.watchlist.add('arrival')
     await account.signInWithGoogle()
@@ -123,7 +123,7 @@ describe('account', () => {
     const s = stores()
     const { repo, space } = memoryRepo()
     const auth = fakeAuth()
-    const account = createAccountStore({ auth: auth.adapter, repo, stores: s })
+    const account = createAccountStore({ auth: auth.adapter, repo, stores: s, storage: null })
     await waitFor(() => expect(account.getSnapshot().storage).toBe('synced'))
     await account.signInWithGoogle()
     s.watchlist.add('arrival')
@@ -138,7 +138,7 @@ describe('account', () => {
   it('deletes saved data locally and in the cloud', async () => {
     const s = stores()
     const { repo, space } = memoryRepo()
-    const account = createAccountStore({ auth: fakeAuth().adapter, repo, stores: s })
+    const account = createAccountStore({ auth: fakeAuth().adapter, repo, stores: s, storage: null })
     await waitFor(() => expect(account.getSnapshot().storage).toBe('synced'))
     account.loadDemoProfile()
     s.sessions.save(session())
@@ -157,8 +157,72 @@ describe('account', () => {
     auth.adapter.signInWithGoogle = async () => {
       throw Object.assign(new Error('x'), { code: 'auth/popup-closed-by-user' })
     }
-    const account = createAccountStore({ auth: auth.adapter, repo: memoryRepo().repo, stores: stores() })
+    const account = createAccountStore({ auth: auth.adapter, repo: memoryRepo().repo, stores: stores(), storage: null })
     await account.signInWithGoogle()
     expect(account.getSnapshot()).toMatchObject({ error: 'Sign-in was cancelled.', busy: false })
+  })
+})
+
+describe('demo profile stays with the guest', () => {
+  it('linking to Google keeps what the guest added and drops the demo titles, here and in the cloud', async () => {
+    const s = stores()
+    const { repo, space } = memoryRepo()
+    const account = createAccountStore({ auth: fakeAuth().adapter, repo, stores: s, storage: null })
+    await waitFor(() => expect(account.getSnapshot().storage).toBe('synced'))
+    s.watchlist.add('moon') // the guest's own
+    account.loadDemoProfile()
+    expect(account.getSnapshot().demoTitleIds.sort()).toEqual(DEMO_PROFILE.map((d) => d.id).sort())
+    await flush()
+    expect(space('anon1').watchlist).toHaveLength(DEMO_PROFILE.length + 1)
+
+    await account.signInWithGoogle()
+    await flush()
+    expect(account.getSnapshot()).toMatchObject({ kind: 'google', demoTitleIds: [] })
+    expect(s.watchlist.getSnapshot().map((e) => e.titleId)).toEqual(['moon'])
+    expect(space('anon1').watchlist.map((e) => e.titleId)).toEqual(['moon'])
+  })
+
+  it("signing in to an existing Google account brings only the guest's own titles", async () => {
+    const s = stores()
+    const { repo, space } = memoryRepo()
+    const account = createAccountStore({ auth: fakeAuth({ existingGoogleUid: 'g1' }).adapter, repo, stores: s, storage: null })
+    await waitFor(() => expect(account.getSnapshot().storage).toBe('synced'))
+    account.loadDemoProfile()
+    s.watchlist.add('moon')
+    await account.signInWithGoogle()
+    await waitFor(() => expect(space('g1').watchlist.map((e) => e.titleId)).toEqual(['moon']))
+  })
+
+  it('a demo title the guest already had stays theirs, and a cancelled sign-in restores the demo', async () => {
+    const s = stores()
+    const auth = fakeAuth()
+    auth.adapter.signInWithGoogle = async () => {
+      throw Object.assign(new Error('x'), { code: 'auth/popup-closed-by-user' })
+    }
+    const account = createAccountStore({ auth: auth.adapter, repo: memoryRepo().repo, stores: s, storage: null })
+    await waitFor(() => expect(account.getSnapshot().phase).toBe('ready'))
+    s.watchlist.add('arrival') // also in the demo profile, but added by the viewer first
+    account.loadDemoProfile()
+    expect(account.getSnapshot().demoTitleIds).not.toContain('arrival')
+    await account.signInWithGoogle()
+    expect(s.watchlist.getSnapshot()).toHaveLength(DEMO_PROFILE.length)
+    expect(account.getSnapshot().demoTitleIds).toHaveLength(DEMO_PROFILE.length - 1)
+    expect(s.watchlist.getSnapshot().filter((e) => e.watched).map((e) => e.titleId).sort()).toEqual(['blade-runner-2049', 'dark'])
+
+    account.clearDemoProfile()
+    expect(s.watchlist.getSnapshot().map((e) => e.titleId)).toEqual(['arrival'])
+  })
+
+  it('remembers which titles are demo across reloads, and forgets one the viewer removes', async () => {
+    const storage = (() => {
+      const d: Record<string, string> = {}
+      return { getItem: (k: string) => d[k] ?? null, setItem: (k: string, v: string) => void (d[k] = v) }
+    })()
+    const s = stores()
+    const a1 = createAccountStore({ auth: null, repo: null, stores: s, storage })
+    a1.loadDemoProfile()
+    s.watchlist.remove('dark')
+    const a2 = createAccountStore({ auth: null, repo: null, stores: stores(), storage })
+    expect(a2.getSnapshot().demoTitleIds.sort()).toEqual(DEMO_PROFILE.map((d) => d.id).filter((id) => id !== 'dark').sort())
   })
 })

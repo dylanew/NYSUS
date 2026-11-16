@@ -74,16 +74,22 @@ export function AccountMenu() {
               <LogIn className="size-4" aria-hidden /> {state.busy ? 'Signing in…' : 'Continue with Google'}
             </button>
           )}
-          <button
-            type="button"
-            className={item}
-            onClick={() => {
-              store.loadDemoProfile()
-              close()
-            }}
-          >
-            <Sparkles className="size-4" aria-hidden /> Load demo profile
-          </button>
+          {state.kind === 'guest' && (
+            <button
+              type="button"
+              className={item}
+              onClick={() => {
+                if (state.demoTitleIds.length) store.clearDemoProfile()
+                else store.loadDemoProfile()
+                close()
+              }}
+            >
+              <Sparkles className="size-4" aria-hidden /> {state.demoTitleIds.length ? 'Remove demo profile' : 'Load demo profile'}
+            </button>
+          )}
+          {state.kind === 'guest' && state.demoTitleIds.length > 0 && state.canSignIn && (
+            <p className="px-3 pb-1 text-xs text-ink-500">Demo titles stay in guest mode. Signing in with Google keeps only what you added yourself.</p>
+          )}
           {state.kind === 'google' && (
             <button type="button" className={item} disabled={state.busy} onClick={() => void store.signOut()}>
               <LogOut className="size-4" aria-hidden /> Sign out
