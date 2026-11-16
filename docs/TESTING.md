@@ -18,6 +18,8 @@
 | `tests/unit/playbackEngine.test.ts` | Scenario determinism and shape; engine behaviour per scenario (no stalls / occasional / frequent / error + recovery); fixed 1080p vs auto; pause; ending |
 | `tests/unit/playbackMetrics.test.ts` | Metrics on a hand-built timeline (state split, ratio, averages, frequency, windows, empty session); stall analysis; findings |
 | `tests/integration/player.test.tsx` | Player store timer and speed; Player → Stream Health journey through an interruption |
+| `tests/unit/liveProbe.test.ts` | Live probe on a fake network: throughput maths, no-cors service pings, unreachable services, monitor interval, adaptive size, offline → zero throughput, data budget; engine fed live samples |
+| `tests/integration/player.test.tsx` (live) | Live mode measures before play, pins speed to 1×, blocks skip, feeds readings to the engine, notes service changes, stops measuring on pause |
 | `tests/eval/discoveryEval.test.ts` | Evaluation set: 6 requests (3 with recorded live model output) with expected and forbidden recommendations |
 
 ## Evaluation

@@ -65,6 +65,7 @@ Prompt v3 adds a `length` field (short / long / any), so "finish this weekend" s
 Phase 3 built the deterministic layer the Phase 4 tools will wrap. The model will never calculate these numbers:
 - `computeMetrics(session, window?)` gives `get_playback_metrics` and `compare_network_conditions` (time windows).
 - `analyseBuffering(session)` gives `analyse_buffering`: each stall with its event ids, duration, throughput vs bitrate, latency and *observations* phrased as correlations.
+- In live mode the same functions run on real measurements of the viewer's connection, so the assistant can explain a real stall. It must still describe service latency as website response time, not server health.
 - `healthFindings(session)` gives the rule-based baseline that `generate_diagnostic_report` must stay consistent with.
 
 ## Workflow B — cloud assistant (Phase 4, not started)

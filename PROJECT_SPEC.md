@@ -17,7 +17,7 @@ The inference source shown in the UI must come from the SDK's `response.inferenc
 ## Phases (deadline 30 Nov 2026, 22:00 GMT)
 1. **Foundation and hybrid inference** — scaffold, shell, Firebase + App Check, real hybrid call with source shown. *(done)*
 2. Entertainment discovery — catalogue, ranking, explanations, watchlist. *(done)*
-3. Streaming player and telemetry — deterministic scenarios, metrics, charts. *(done)*
+3. Streaming player and telemetry — live network measurement and deterministic scenarios, metrics, charts. *(done)*
 4. Agentic assistant — six tools, validated function-calling loop, grounded reports.
 5. Persistence and polish — guest mode/auth, Firestore, responsive UI.
 6. Deployment and submission — Firebase Hosting, docs, demo video, Devpost.

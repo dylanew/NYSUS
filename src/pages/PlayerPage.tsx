@@ -5,6 +5,7 @@ import { EventTimeline } from '../components/player/EventTimeline'
 import { MetricTiles } from '../components/player/MetricTiles'
 import { PlayerControls } from '../components/player/PlayerControls'
 import { PlayerViewport } from '../components/player/PlayerViewport'
+import { ServiceCheck } from '../components/player/ServiceCheck'
 import { STATUS_LABEL } from '../components/player/labels'
 import { usePlayer } from '../hooks/usePlayer'
 import { formatDuration, getTitle } from '../services/catalogue/catalogue'
@@ -32,7 +33,7 @@ export function PlayerPage() {
         <div>
           <h1 className="text-2xl font-semibold md:text-3xl">{title.title}</h1>
           <p className="text-sm text-ink-500">
-            {title.year} · {formatDuration(title)} · showing a simulated 10-minute preview
+            {title.year} · {formatDuration(title)} · 10-minute preview stand-in, no real video
           </p>
         </div>
         <span className="rounded-full border border-ink-700 px-3 py-1 text-xs text-ink-300" aria-live="polite">
@@ -65,7 +66,11 @@ export function PlayerPage() {
               <span className="text-sm text-ink-500">The streaming assistant arrives in Phase 4</span>
             </span>
           </Link>
-          <p className="text-xs text-ink-500">All playback, network conditions and telemetry here are simulated. NYSUS does not connect to or diagnose any real streaming service.</p>
+          <ServiceCheck />
+          <p className="text-xs text-ink-500">
+            Playback is modelled, not real video. In live mode the network data is real: download speed measured via Cloudflare and response time to the chosen
+            service's website. The simulated scenarios are scripted. NYSUS has no access to any streaming service's own servers or accounts.
+          </p>
         </div>
       </div>
     </div>

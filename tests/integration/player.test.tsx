@@ -65,3 +65,40 @@ describe('Player → Stream Health journey', () => {
     act(() => playerStore.pause())
   })
 })
+
+describe('player store in live mode', () => {
+  it('measures before play, runs at real time, and feeds readings to the engine', async () => {
+    const { createLiveMonitor } = await import('../../src/services/network/liveProbe')
+    let clock = 0
+    const fetch = (async (input: RequestInfo | URL) => {
+      clock += 10
+      const bytes = Number(new URL(String(input)).searchParams.get('bytes') ?? 0)
+      return { ok: true, status: 200, arrayBuffer: async () => ((clock += (bytes * 8) / 20_000), new ArrayBuffer(bytes)) } as Response
+    }) as typeof globalThis.fetch
+    const pending: (() => void)[] = []
+    const monitor = createLiveMonitor({ fetch, now: () => clock }, { setTimeout: (fn) => pending.push(fn), clearTimeout: () => void pending.splice(0) })
+    const sched = fakeScheduler()
+    const store = createPlayerStore(sched, () => 0, monitor)
+    store.load('dune')
+    store.setSpeed(10)
+    store.setScenario('live')
+    expect(monitor.running).toBe(true)
+    await new Promise((r) => setTimeout(r, 0))
+    expect(store.getSnapshot().live.latest).toMatchObject({ throughputMbps: 20 })
+    expect(monitor.running).toBe(false) // first reading taken; idle until play
+
+    store.play()
+    expect(monitor.running).toBe(true)
+    expect(sched.active()).toEqual([1000]) // live ignores the 10× setting
+    expect(store.getSnapshot().speed).toBe(1)
+    sched.tick()
+    expect(store.getSnapshot().throughputMbps).toBe(20)
+    store.skip(30)
+    expect(store.getSnapshot().positionSeconds).toBe(1) // no fast-forwarding reality
+
+    store.setService('iplayer')
+    expect(store.getSnapshot().session!.events.at(-1)!.details).toBe('Live latency now measured to BBC iPlayer')
+    store.pause()
+    expect(monitor.running).toBe(false)
+  })
+})

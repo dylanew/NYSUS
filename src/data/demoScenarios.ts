@@ -69,7 +69,20 @@ export const SCENARIOS: NetworkScenario[] = [
   },
 ]
 
+/**
+ * Live mode: the engine is fed real measurements (see services/network/liveProbe.ts), so
+ * `at()` is never consulted. It reports "no data" rather than inventing a number.
+ */
+export const LIVE_SCENARIO: NetworkScenario = {
+  id: 'live',
+  label: 'Live: your connection',
+  description:
+    'Real measurements from your connection: throughput from timed downloads via Cloudflare, latency to the selected service\'s website. Runs in real time and uses data.',
+  at: () => ({ throughputMbps: 0, latencyMs: 0 }),
+}
+
 export function getScenario(id: ScenarioId): NetworkScenario {
+  if (id === 'live') return LIVE_SCENARIO
   return SCENARIOS.find((s) => s.id === id) ?? SCENARIOS[0]!
 }
 

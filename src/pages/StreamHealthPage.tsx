@@ -10,6 +10,7 @@ import { getTitle } from '../services/catalogue/catalogue'
 import { healthFindings, type Severity } from '../services/diagnostics/findings'
 import { formatClock } from '../services/playback/metrics'
 import { getScenario } from '../data/demoScenarios'
+import { getService } from '../services/network/liveProbe'
 
 const SEVERITY = {
   good: { icon: CheckCircle2, label: 'Healthy', cls: 'text-local' },
@@ -42,7 +43,7 @@ export function StreamHealthPage() {
         <div>
           <h1 className="text-2xl font-semibold md:text-3xl">Stream Health</h1>
           <p className="text-sm text-ink-500">
-            Session {session.id} · {title?.title} · {getScenario(state.scenario).label} · {formatClock(session.elapsedMs)} recorded
+            Session {session.id} · {title?.title} · {state.scenario === 'live' ? `Live measurement, latency to ${getService(state.live.serviceId).label}` : getScenario(state.scenario).label} · {formatClock(session.elapsedMs)} recorded
           </p>
         </div>
         <span className="rounded-full border border-ink-700 px-3 py-1 text-xs text-ink-300">{STATUS_LABEL[state.status]}</span>

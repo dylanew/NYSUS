@@ -1,5 +1,5 @@
 import { QUALITY_LADDER, bitrateOf, getScenario } from '../../data/demoScenarios'
-import type { PlaybackEvent, PlaybackSession, PlaybackStatus, QualityId, ScenarioId } from '../../types/playback'
+import type { NetworkSample, PlaybackEvent, PlaybackSession, PlaybackStatus, QualityId, ScenarioId } from '../../types/playback'
 
 /**
  * Deterministic playback simulator. One `tick()` advances one second of simulated time.
@@ -51,6 +51,7 @@ export class PlaybackEngine {
   private offlineS = 0
   private bufferStartS = 0
   private eventCount = 0
+  private liveSample: NetworkSample | null = null
   private readonly sessionId: string
   private state: EngineState
   private readonly opts: EngineOptions
@@ -106,6 +107,19 @@ export class PlaybackEngine {
     if (this.state.session) this.emit('network_change', { scenario: id, details: `Network: ${getScenario(id).label}` })
   }
 
+  /**
+   * Live mode input: the latest real measurement. The engine stays deterministic given its
+   * inputs; in live mode those inputs simply come from the network instead of a script.
+   */
+  setLiveSample(sample: NetworkSample | null) {
+    this.liveSample = sample
+  }
+
+  /** Records a note about the network source (e.g. which service latency is measured against). */
+  annotateNetwork(details: string) {
+    if (this.state.session) this.emit('network_change', { scenario: this.state.scenario, details })
+  }
+
   setQualityMode(mode: QualityMode) {
     this.update({ qualityMode: mode })
     if (mode !== 'auto') this.switchQuality(mode, 'Selected by viewer')
@@ -116,7 +130,8 @@ export class PlaybackEngine {
     const s = this.state
     if (!s.session || s.status === 'ended') return
     this.simS += 1
-    const net = getScenario(s.scenario).at(this.simS - this.scenarioStartS)
+    const net =
+      s.scenario === 'live' ? (this.liveSample ?? { throughputMbps: 0, latencyMs: 0 }) : getScenario(s.scenario).at(this.simS - this.scenarioStartS)
     this.update({ throughputMbps: net.throughputMbps, latencyMs: net.latencyMs })
     this.estimateMbps = this.estimateMbps === null ? net.throughputMbps : (1 - ESTIMATE_SMOOTHING) * this.estimateMbps + ESTIMATE_SMOOTHING * net.throughputMbps
     this.offlineS = net.throughputMbps === 0 ? this.offlineS + 1 : 0

@@ -31,6 +31,8 @@ tests/
 ## Playback simulation (Journey B)
 `PlaybackEngine.tick()` advances one simulated second: read the scenario's network sample → download (throughput ÷ bitrate seconds of video, 12 s buffer cap) → play or stall → adaptive bitrate (EWMA estimate, 0.8 safety down, 0.6 hysteresis up) → record events. Network "noise" is a hash of (scenario, second), so identical actions always give identical telemetry. The store only decides how often to tick (1×–10×), and "Simulate 30 s" calls the same tick 30 times.
 
+**Live mode** (`scenario: 'live'`): `services/network/liveProbe.ts` runs a monitor that, every 2 s, times a download from `speed.cloudflare.com/__down` (size adapts to about 400 ms, 100 kB to 3 MB) and a `no-cors` request to the selected service's website favicon. The store hands the latest reading to `engine.setLiveSample()` before each tick, so the same engine, metrics and findings run on real numbers. In live mode, speed is pinned to 1× and skip is disabled. The monitor only runs while live playback needs data, a failed download counts as zero throughput (an outage), and it stops at 150 MB. The Service response check on the Player page times each service's website once cold and three times warm. These are website round trips, not video-server health, and the UI says so.
+
 Telemetry is a typed event log (`types/playback.ts`) with stable ids (`s1-e42`). All metrics and findings are pure functions of that log.
 
 ## Journey A pipeline

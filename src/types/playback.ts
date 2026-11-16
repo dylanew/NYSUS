@@ -45,7 +45,8 @@ export interface PlaybackSession {
 }
 
 export type QualityId = '2160p' | '1080p' | '720p' | '480p' | '360p'
-export type ScenarioId = 'stable' | 'unstable' | 'poor' | 'interruption'
+/** 'live' uses real measurements from the viewer's connection instead of a scripted scenario. */
+export type ScenarioId = 'stable' | 'unstable' | 'poor' | 'interruption' | 'live'
 
 export interface NetworkSample {
   throughputMbps: number
