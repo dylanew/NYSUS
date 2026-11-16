@@ -1,29 +1,35 @@
 import type { RouteObject } from 'react-router'
 import { AppLayout } from '../components/layout/AppLayout'
+import { RouteError } from '../components/layout/RouteError'
+import { PageLoading } from '../components/layout/PageLoading'
 import { HomePage } from '../pages/HomePage'
-import { SettingsPage } from '../pages/SettingsPage'
 import { PlaceholderPage } from '../pages/PlaceholderPage'
-import { DiscoverPage } from '../pages/DiscoverPage'
-import { WatchlistPage } from '../pages/WatchlistPage'
-import { TitlePage } from '../pages/TitlePage'
-import { PlayerPage } from '../pages/PlayerPage'
-import { StreamHealthPage } from '../pages/StreamHealthPage'
-import { AssistantPage } from '../pages/AssistantPage'
 
+/**
+ * Home loads with the shell; other pages load on first visit, so charts (Recharts) and the
+ * player don't weigh down the first screen. The layout shows a progress bar meanwhile.
+ */
 export const routes: RouteObject[] = [
   {
     path: '/',
     element: <AppLayout />,
+    errorElement: <RouteError />,
+    hydrateFallbackElement: <PageLoading />,
     children: [
-      { index: true, element: <HomePage /> },
-      { path: 'discover', element: <DiscoverPage /> },
-      { path: 'watchlist', element: <WatchlistPage /> },
-      { path: 'title/:id', element: <TitlePage /> },
-      { path: 'player', element: <PlayerPage /> },
-      { path: 'health', element: <StreamHealthPage /> },
-      { path: 'assistant', element: <AssistantPage /> },
-      { path: 'settings', element: <SettingsPage /> },
-      { path: '*', element: <PlaceholderPage title="Not found" /> },
+      {
+        errorElement: <RouteError inline />,
+        children: [
+          { index: true, element: <HomePage /> },
+          { path: 'discover', lazy: async () => ({ Component: (await import('../pages/DiscoverPage')).DiscoverPage }) },
+          { path: 'watchlist', lazy: async () => ({ Component: (await import('../pages/WatchlistPage')).WatchlistPage }) },
+          { path: 'title/:id', lazy: async () => ({ Component: (await import('../pages/TitlePage')).TitlePage }) },
+          { path: 'player', lazy: async () => ({ Component: (await import('../pages/PlayerPage')).PlayerPage }) },
+          { path: 'health', lazy: async () => ({ Component: (await import('../pages/StreamHealthPage')).StreamHealthPage }) },
+          { path: 'assistant', lazy: async () => ({ Component: (await import('../pages/AssistantPage')).AssistantPage }) },
+          { path: 'settings', lazy: async () => ({ Component: (await import('../pages/SettingsPage')).SettingsPage }) },
+          { path: '*', element: <PlaceholderPage title="Not found" /> },
+        ],
+      },
     ],
   },
 ]

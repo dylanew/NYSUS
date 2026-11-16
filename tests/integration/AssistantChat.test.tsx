@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router'
+import { MemoryRouter } from 'react-router'
 import { AssistantChat } from '../../src/components/assistant/AssistantChat'
 import { createAssistantStore } from '../../src/services/assistant/assistantStore'
 import { contextFor, scriptedChat, sessionFor, type Step } from '../helpers/assistantFixtures'
@@ -95,7 +95,7 @@ describe('assistant across the app', () => {
     playerStore.skip(40)
     playerStore.pause()
 
-    render(<RouterProvider router={createMemoryRouter((await import('../../src/app/routes')).routes, { initialEntries: ['/health'] })} />)
+    await (await import('../helpers/renderRoute')).renderRoute('/health')
     await userEvent.click(screen.getByRole('button', { name: /ask the assistant to investigate/i }))
     const drawer = await screen.findByRole('dialog', { name: 'Streaming assistant' })
     expect(await within(drawer).findByText('Throughput fell below the bitrate.')).toBeInTheDocument()

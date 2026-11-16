@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router'
+import { NavLink, Outlet, useLocation, useNavigation } from 'react-router'
 import { NAV_ITEMS } from './navItems'
 import { Wordmark } from './Wordmark'
 import { AssistantDrawer } from '../assistant/AssistantDrawer'
+import { AccountMenu } from '../account/AccountMenu'
+import { NavigationProgress } from './PageLoading'
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `relative flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors ${
@@ -14,6 +16,7 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 export function AppLayout() {
   const navRef = useRef<HTMLElement>(null)
   const { pathname } = useLocation()
+  const navigation = useNavigation()
 
   // On narrow screens the nav row scrolls sideways; keep the current page's tab in view.
   useEffect(() => {
@@ -24,9 +27,12 @@ export function AppLayout() {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-20 border-b border-ink-800 bg-ink-900/95 backdrop-blur">
         <div aria-hidden className="popcorn-stripes h-1.5" />
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-1 px-2 py-2 lg:flex-row lg:items-center lg:gap-8 lg:px-6">
-          <Wordmark className="px-2 py-1 lg:px-0" />
-          <nav ref={navRef} aria-label="Main" className="-mx-2 flex gap-1 overflow-x-auto px-2 [scrollbar-width:none] lg:mx-0 lg:px-0">
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-x-8 gap-y-1 px-2 py-2 lg:flex-nowrap lg:px-6">
+          <Wordmark className="order-1 px-2 py-1 lg:px-0" />
+          <div className="order-2 ml-auto pr-2 lg:order-3 lg:pr-0">
+            <AccountMenu />
+          </div>
+          <nav ref={navRef} aria-label="Main" className="order-3 -mx-2 flex w-[calc(100%+1rem)] gap-1 overflow-x-auto px-2 [scrollbar-width:none] lg:order-2 lg:mx-0 lg:w-auto lg:min-w-0 lg:px-0">
             {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
               <NavLink key={to} to={to} end={to === '/'} className={linkClass}>
                 <Icon className="size-4" aria-hidden />
@@ -35,6 +41,7 @@ export function AppLayout() {
             ))}
           </nav>
         </div>
+        <NavigationProgress active={navigation.state === 'loading'} />
       </header>
       <div className="flex flex-1">
         <div className="flex min-w-0 flex-1 flex-col">

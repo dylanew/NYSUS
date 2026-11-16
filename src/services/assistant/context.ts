@@ -17,6 +17,8 @@ export interface ToolContext {
     liveServiceLabel: string
   }
   getWatchlist(): { title: MediaTitle; watched: boolean }[]
+  /** Structured interests from recent discovery requests (no request text). Optional for older callers. */
+  getInterests?(): { genres: string[]; moods: string[]; themes: string[] }
   titles: MediaTitle[]
   currentYear: number
 }

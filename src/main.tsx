@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router'
 import './index.css'
 import { router } from './app/router'
+import { startBackgroundServices } from './app/background'
+
+startBackgroundServices()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

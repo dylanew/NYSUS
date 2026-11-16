@@ -1,8 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createMemoryRouter, RouterProvider } from 'react-router'
-import { routes } from '../../src/app/routes'
+import { renderRoute } from '../helpers/renderRoute'
 import { fakeModel } from './fakeModel'
 
 const output = JSON.stringify({
@@ -20,11 +19,11 @@ vi.mock('../../src/services/ai/onDeviceAvailability', async (orig) => ({
 
 beforeEach(() => localStorage.clear())
 
-const renderAt = (path: string) => render(<RouterProvider router={createMemoryRouter(routes, { initialEntries: [path] })} />)
+const renderAt = (path: string) => renderRoute(path)
 
 describe('Discover → watchlist journey', () => {
   it('shows the inference source, explained results, and saves to the watchlist', async () => {
-    renderAt('/discover')
+    await renderAt('/discover')
     await userEvent.type(screen.getByLabelText(/what would you like to watch/i), 'Something like Interstellar, but darker')
     await userEvent.click(screen.getByRole('button', { name: /find something/i }))
 
@@ -41,13 +40,14 @@ describe('Discover → watchlist journey', () => {
     expect(within(cards[0]!).getByRole('button', { name: /in watchlist/i })).toHaveAttribute('aria-pressed', 'true')
 
     await userEvent.click(screen.getAllByRole('link', { name: 'Watchlist' })[0]!)
-    expect(await screen.findByRole('link', { name: firstTitle })).toBeInTheDocument()
+    await screen.findByRole('heading', { name: 'Watchlist', level: 1 })
+    expect(screen.getByRole('link', { name: firstTitle })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: /mark watched/i }))
     expect(screen.getByText(/Watched \(1\)/)).toBeInTheDocument()
   })
 
   it('filters the catalogue by genre without a query', async () => {
-    renderAt('/discover')
+    await renderAt('/discover')
     await userEvent.click(screen.getByRole('button', { name: 'animation' }))
     const cards = within(screen.getByRole('region', { name: 'Results' })).getAllByRole('article')
     expect(cards.map((c) => within(c).getAllByRole('link')[1]!.textContent)).toEqual(['Spirited Away', 'Arcane'])

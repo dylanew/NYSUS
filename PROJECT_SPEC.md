@@ -19,7 +19,7 @@ The inference source shown in the UI must come from the SDK's `response.inferenc
 2. Entertainment discovery — catalogue, ranking, explanations, watchlist. *(done)*
 3. Streaming player and telemetry — live network measurement and deterministic scenarios, metrics, charts. *(done)*
 4. Agentic assistant — six tools, validated function-calling loop, grounded reports. *(built; needs a live check against Gemini)*
-5. Persistence and polish — guest mode/auth, Firestore, responsive UI.
+5. Persistence and polish — guest mode/auth, Firestore, responsive UI. *(done: anonymous guest + Google, Firestore with tested rules, lazy pages, Playwright journey)*
 6. Deployment and submission — Firebase Hosting, docs, demo video, Devpost.
 
 ## Non-goals for the MVP
