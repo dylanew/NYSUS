@@ -1,10 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { HeartPulse, MessageSquare } from 'lucide-react'
 import { EventTimeline } from '../components/player/EventTimeline'
 import { MetricTiles } from '../components/player/MetricTiles'
 import { PlayerControls } from '../components/player/PlayerControls'
-import { PlayerViewport } from '../components/player/PlayerViewport'
+import { RetroTV } from '../components/player/RetroTV'
 import { ServiceCheck } from '../components/player/ServiceCheck'
 import { STATUS_LABEL } from '../components/player/labels'
 import { usePlayer } from '../hooks/usePlayer'
@@ -17,6 +17,8 @@ const DEFAULT_TITLE = 'interstellar'
 export function PlayerPage() {
   const [params] = useSearchParams()
   const { state, store } = usePlayer()
+  // Cosmetic: there is no audio, but the knob should still remember where it was turned to.
+  const [volume, setVolume] = useState(80)
   const requested = params.get('title')
   const titleId = requested && getTitle(requested) ? requested : (state.titleId ?? DEFAULT_TITLE)
   const title = getTitle(titleId)!
@@ -26,7 +28,6 @@ export function PlayerPage() {
   }, [store, titleId])
 
   const metrics = state.session ? computeMetrics(state.session) : null
-  const playing = state.status === 'playing' || state.status === 'buffering'
 
   return (
     <div className="space-y-6">
@@ -42,7 +43,7 @@ export function PlayerPage() {
         </span>
       </header>
 
-      <PlayerViewport title={title} state={state} onToggle={() => (playing ? store.pause() : store.play())} />
+      <RetroTV title={title} state={state} store={store} volume={volume} onVolume={setVolume} />
       <PlayerControls state={state} store={store} />
 
       {metrics && <MetricTiles metrics={metrics} />}

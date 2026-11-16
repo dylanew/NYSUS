@@ -1,5 +1,4 @@
-import { FastForward, Pause, Play, RotateCcw, Volume2 } from 'lucide-react'
-import { useState } from 'react'
+import { FastForward, Pause, Play, RotateCcw } from 'lucide-react'
 import { LIVE_SCENARIO, QUALITY_LADDER, SCENARIOS, getScenario } from '../../data/demoScenarios'
 import { STREAMING_SERVICES, getService } from '../../services/network/liveProbe'
 import { CLIP_SECONDS, type QualityMode } from '../../services/playback/engine'
@@ -10,7 +9,6 @@ import type { ScenarioId } from '../../types/playback'
 const select = 'rounded-lg border border-ink-700 bg-ink-950 px-2 py-1.5 text-sm text-ink-100 focus:border-accent-400 focus:outline-none'
 
 export function PlayerControls({ state, store }: { state: PlayerSnapshot; store: PlayerStore }) {
-  const [volume, setVolume] = useState(80)
   const playing = state.status === 'playing' || state.status === 'buffering'
   const live = state.scenario === 'live'
   const waitingForFirstReading = live && state.live.latest === null && state.live.status !== 'budget_reached'
@@ -44,11 +42,6 @@ export function PlayerControls({ state, store }: { state: PlayerSnapshot; store:
         <span className="text-sm tabular-nums text-ink-300">
           {formatClock(state.positionSeconds * 1000)} / {formatClock(CLIP_SECONDS * 1000)}
         </span>
-        <label className="flex items-center gap-2 text-ink-500">
-          <Volume2 className="size-4" aria-hidden />
-          <span className="sr-only">Volume</span>
-          <input type="range" min={0} max={100} value={volume} onChange={(e) => setVolume(Number(e.target.value))} className="w-20 accent-accent-500" />
-        </label>
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {!live && <button type="button" onClick={() => store.skip(30)} disabled={state.status === 'idle' || state.status === 'ended'} className="inline-flex items-center gap-1 rounded-lg border border-ink-700 px-2.5 py-1.5 text-xs text-ink-300 hover:text-ink-100 disabled:opacity-40">
             <FastForward className="size-3.5" aria-hidden /> Simulate 30 s
@@ -59,6 +52,7 @@ export function PlayerControls({ state, store }: { state: PlayerSnapshot; store:
         </div>
       </div>
 
+      {/* The same settings as the TV knobs, as plain dropdowns for anyone who prefers them. */}
       <div className="grid gap-3 sm:grid-cols-3">
         <label className="flex flex-col gap-1 text-xs text-ink-500">
           Network

@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { AlertTriangle, Clapperboard, Gauge, Loader2, Play, Wifi, WifiOff } from 'lucide-react'
 import { MAX_BUFFER_SECONDS } from '../../services/playback/engine'
 import { formatClock } from '../../services/playback/metrics'
@@ -106,16 +106,15 @@ function Pipeline({ state, n }: { state: PlayerSnapshot; n: Narration }) {
   )
 }
 
-export function PlayerViewport({ title, state, onToggle }: { title: MediaTitle; state: PlayerSnapshot; onToggle: () => void }) {
+/** The picture tube: simulated picture plus the explanatory overlays. Extra overlays go in `children`. */
+export function PlayerScreen({ title, state, onToggle, children }: { title: MediaTitle; state: PlayerSnapshot; onToggle: () => void; children?: ReactNode }) {
   const playing = state.status === 'playing' || state.status === 'buffering'
   const n = narrate(state)
   const pic = PICTURE[state.quality]
   const dim = state.status !== 'playing'
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-ink-800 bg-ink-900">
-      <div aria-hidden className="popcorn-stripes h-1" />
-      <div className="relative aspect-video overflow-hidden bg-black">
+      <div className="tv-crt relative aspect-video overflow-hidden bg-black">
         {/* The "picture": generated artwork, softened and pixelated to match the current quality. */}
         <div className="absolute inset-0 transition-[filter] duration-700" style={{ filter: `blur(${pic.blur}px) brightness(${dim ? 0.55 : 0.9})` }}>
           <Artwork title={title} className="size-full" showLabels={false} />
@@ -191,14 +190,22 @@ export function PlayerViewport({ title, state, onToggle }: { title: MediaTitle; 
             {n.headline}
           </p>
         </div>
+        {children}
+        {/* Tube glass: scanlines, curvature shading and a highlight, above everything else. */}
+        <div aria-hidden className="tv-glass pointer-events-none absolute inset-0" />
       </div>
+  )
+}
 
-      <div className="space-y-3 border-t border-ink-800 px-4 py-4">
-        <Pipeline state={state} n={n} />
-        <div className="space-y-1">
-          <p className="text-sm text-ink-100">{n.detail}</p>
-          <p className="text-xs text-ink-500">{n.source}</p>
-        </div>
+/** What the simulation is doing, as an animated pipeline and a sentence, shown under the screen. */
+export function PlayerReadout({ state }: { state: PlayerSnapshot }) {
+  const n = narrate(state)
+  return (
+    <div className="space-y-3">
+      <Pipeline state={state} n={n} />
+      <div className="space-y-1">
+        <p className="text-sm text-ink-100">{n.detail}</p>
+        <p className="text-xs text-ink-500">{n.source}</p>
       </div>
     </div>
   )
