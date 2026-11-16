@@ -2,7 +2,9 @@
 
 An AI-powered streaming companion: personalised entertainment discovery plus playback diagnostics driven by live measurements of your own connection or by scripted scenarios. Built for the Firebase #BuildHybridAI hackathon.
 
-> Status: **Phase 3 — simulated player and stream health.** Pick a title and either measure your **live connection** (real download speed via Cloudflare's public speed-test endpoint, plus response time to a chosen streaming service's website: Netflix, Prime Video, Disney+, YouTube, Apple TV+ or BBC iPlayer) or pick a scripted condition (stable, unstable, poor, interruption). A player model then buffers, switches quality and fails as a real player would. Live mode runs in real time and uses data, capped at 150 MB per run. It cannot see any service's own video servers, which no service exposes. Stream Health charts the telemetry and lists rule-based findings with event IDs as evidence.
+> Status: **Phase 4 — agentic streaming assistant.** Ask "why does my stream keep buffering?" from any page (the *Ask NYSUS* button), the Player or Stream Health. Gemini in the cloud, through Firebase AI Logic, decides which of six app tools to call; the app validates and runs them on the real session telemetry and shows each call as it happens. Answers cite event ids, a diagnostic report card shows the deterministic findings, and invented ids or figures are flagged. Without Firebase, the same tools run as a labelled rules-based diagnosis.
+>
+> Phase 3: Pick a title and either measure your **live connection** (real download speed via Cloudflare's public speed-test endpoint, plus response time to a chosen streaming service's website: Netflix, Prime Video, Disney+, YouTube, Apple TV+ or BBC iPlayer) or pick a scripted condition (stable, unstable, poor, interruption). A player model then buffers, switches quality and fails as a real player would. Live mode runs in real time and uses data, capped at 150 MB per run. It cannot see any service's own video servers, which no service exposes. Stream Health charts the telemetry and lists rule-based findings with event IDs as evidence.
 >
 > Phase 2: Describe what you want to watch; Firebase AI Logic hybrid inference extracts structured preferences on-device (Chrome's built-in model) or in the cloud (Gemini) and shows which one actually ran. Deterministic ranking then recommends titles from a 48-title demo catalogue, explains each match, and lets you build a watchlist. Without Firebase, discovery falls back to clearly labelled keyword matching.
 
@@ -39,7 +41,7 @@ On-device inference needs **Chrome 139+ on desktop** with `chrome://flags/#promp
 
 - [PROJECT_SPEC.md](PROJECT_SPEC.md) — product spec summary and phase plan
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- [docs/AI_DESIGN.md](docs/AI_DESIGN.md) — hybrid inference design, verified SDK behaviour, risks
+- [docs/AI_DESIGN.md](docs/AI_DESIGN.md) — hybrid inference, the cloud assistant's tools and loop, verified SDK behaviour, risks
 - [docs/TESTING.md](docs/TESTING.md)
 
 ## Licence

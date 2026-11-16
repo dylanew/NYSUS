@@ -9,6 +9,8 @@ src/
     layout/     AppLayout (sidebar / mobile nav), Wordmark, nav items
     ai/         DiscoveryPrompt, InferenceBadge, PreferenceResult, DeviceModelStatus
     media/      MediaCard, Artwork (generated), WatchlistButton, FilterChips
+    assistant/  AssistantChat, AssistantDrawer (on every page), ToolActivityList,
+                DiagnosticReportCard, RecommendationStrip, MessageText
   data/         catalogue.ts (48 curated films and series), demoScenarios.ts (network scenarios, bitrate ladder)
   hooks/        useAiDeps, useDiscovery, useOnDeviceModel, useWatchlist
   pages/        Home, Discover, Watchlist, Title, Settings, Placeholder (later phases)
@@ -16,13 +18,16 @@ src/
   services/
     firebase/   config.ts (env → validated options), app.ts (initializeApp + App Check)
     ai/         firebaseAI.ts, hybridInference.ts, schemas.ts, prompts.ts,
-                inferenceMetadata.ts, onDeviceAvailability.ts, errors.ts
+                inferenceMetadata.ts, onDeviceAvailability.ts, errors.ts,
+                cloudAssistant.ts (validated function-calling loop)
     catalogue/  vocabulary.ts (controlled tags + synonyms), catalogue.ts (lookup, "like X" detection)
     recommendations/
                 discover.ts (Journey A pipeline), guards.ts, ranking.ts, keywordExtraction.ts
     watchlist/  watchlistStore.ts (localStorage, swappable for Firestore in Phase 5)
     playback/   engine.ts (deterministic simulator), metrics.ts, playerStore.ts (app-wide timer)
     diagnostics/ buffering.ts (stall analysis), findings.ts (rule-based health findings)
+    assistant/  context.ts (what tools may read), toolSchemas.ts (declarations + Zod), tools.ts,
+                grounding.ts (answer checks), assistantStore.ts (app-wide conversation)
 tests/
   unit/         pure logic
   integration/  services + components, including the real firebase/ai SDK with faked Chrome/network
@@ -47,5 +52,8 @@ request → `extractPreferences` (hybrid AI, or keyword fallback if AI is unavai
 - **Services own logic, components render.** `extractPreferences()` takes its models as dependencies, so it is testable without Firebase.
 - **Lazy, singleton initialisation** of the Firebase app, App Check and AI models.
 
+## Journey C: assistant
+question → `AssistantConversation.send` → Gemini (cloud) picks tools → validate → run deterministic tool on the live player/watchlist stores → function responses → Gemini answers → grounding check → message with tool activity, report card, recommendation cards and checked citations. The drawer (every page), the Assistant page, *Ask why it's buffering* on the Player and *Ask the assistant to investigate* on Stream Health share one conversation.
+
 ## Planned additions (later phases)
-`services/diagnostics`, `services/ai/cloudAssistant.ts`, `data/demoScenarios.ts`, Recharts dashboards, Firestore persistence.
+Firestore persistence, auth/guest mode, Playwright end-to-end suite.

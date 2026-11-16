@@ -12,6 +12,7 @@ export interface FirebaseServices {
   appCheck: AppCheck | null
   appCheckMode: 'recaptcha-enterprise' | 'debug' | 'disabled'
   cloudModel: string | null
+  assistantModel: string | null
 }
 
 let cached: { config: FirebaseConfigResult; services: FirebaseServices | null } | null = null
@@ -49,7 +50,7 @@ export function getFirebase(): { config: FirebaseConfigResult; services: Firebas
     appCheckMode = 'disabled'
   }
 
-  cached = { config, services: { app, appCheck, appCheckMode, cloudModel: config.cloudModel } }
+  cached = { config, services: { app, appCheck, appCheckMode, cloudModel: config.cloudModel, assistantModel: config.assistantModel } }
   return cached
 }
 

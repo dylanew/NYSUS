@@ -53,6 +53,7 @@ export function SettingsPage() {
         </dl>
       )}
       <Row label="Cloud model (fallback)" value={services?.cloudModel ?? DEFAULT_CLOUD_MODEL} ok />
+      <Row label="Assistant model (cloud, function calling)" value={services?.assistantModel ?? services?.cloudModel ?? DEFAULT_CLOUD_MODEL} ok />
       {!config.ok && (
         <p className="mt-6 text-sm text-ink-300">
           Copy <code className="text-ink-100">.env.example</code> to <code className="text-ink-100">.env.local</code>, fill in your Firebase web app config, and restart the dev server.

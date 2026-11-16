@@ -1,4 +1,7 @@
-import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode, type AI, type GenerativeModel } from 'firebase/ai'
+import { FunctionCallingMode, getAI, getGenerativeModel, GoogleAIBackend, InferenceMode, type AI, type Content, type GenerativeModel } from 'firebase/ai'
+import { TOOL_DECLARATIONS } from '../assistant/toolSchemas'
+import type { ChatFactory } from './cloudAssistant'
+import { ASSISTANT_SYSTEM } from './prompts'
 import { getFirebase } from '../firebase/app'
 import { ON_DEVICE_CREATE_OPTIONS } from './onDeviceAvailability'
 import { preferenceJsonSchema } from './schemas'
@@ -63,4 +66,42 @@ export function createPreferenceModels(instance: AI, cloudModelName: string = DE
     cloudOnly: getGenerativeModel(instance, { mode: InferenceMode.ONLY_IN_CLOUD, inCloudParams }),
     cloudModelName,
   }
+}
+
+// ── Workflow B: cloud assistant ─────────────────────────────────────────────
+
+export interface AssistantModel {
+  model: GenerativeModel
+  modelName: string
+  startChat: ChatFactory
+}
+
+/**
+ * Cloud-only model with the six tool declarations. ONLY_IN_CLOUD on purpose: the on-device
+ * model has no multi-turn chat or function calling. No functionReference is set, so the SDK
+ * never runs tools by itself; cloudAssistant.ts runs the validated loop.
+ */
+export function createAssistantModel(instance: AI, modelName: string = DEFAULT_CLOUD_MODEL): AssistantModel {
+  const model = getGenerativeModel(instance, {
+    mode: InferenceMode.ONLY_IN_CLOUD,
+    inCloudParams: {
+      model: modelName,
+      generationConfig: { temperature: 0.3 },
+      tools: [{ functionDeclarations: TOOL_DECLARATIONS }],
+      toolConfig: { functionCallingConfig: { mode: FunctionCallingMode.AUTO } },
+      systemInstruction: ASSISTANT_SYSTEM,
+    },
+  })
+  return { model, modelName, startChat: (history?: Content[]) => model.startChat({ history }) }
+}
+
+let assistant: AssistantModel | null = null
+
+export function getAssistantModel(): AssistantModel | null {
+  if (assistant) return assistant
+  const instance = getFirebaseAI()
+  if (!instance) return null
+  const services = getFirebase().services
+  assistant = createAssistantModel(instance, services?.assistantModel ?? services?.cloudModel ?? DEFAULT_CLOUD_MODEL)
+  return assistant
 }

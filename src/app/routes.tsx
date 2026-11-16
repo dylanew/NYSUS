@@ -8,6 +8,7 @@ import { WatchlistPage } from '../pages/WatchlistPage'
 import { TitlePage } from '../pages/TitlePage'
 import { PlayerPage } from '../pages/PlayerPage'
 import { StreamHealthPage } from '../pages/StreamHealthPage'
+import { AssistantPage } from '../pages/AssistantPage'
 
 export const routes: RouteObject[] = [
   {
@@ -20,7 +21,7 @@ export const routes: RouteObject[] = [
       { path: 'title/:id', element: <TitlePage /> },
       { path: 'player', element: <PlayerPage /> },
       { path: 'health', element: <StreamHealthPage /> },
-      { path: 'assistant', element: <PlaceholderPage title="AI Assistant" phase={4} /> },
+      { path: 'assistant', element: <AssistantPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <PlaceholderPage title="Not found" /> },
     ],

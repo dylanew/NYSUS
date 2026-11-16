@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router'
 import { NAV_ITEMS } from './navItems'
 import { Wordmark } from './Wordmark'
+import { AssistantDrawer } from '../assistant/AssistantDrawer'
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `flex shrink-0 items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors ${
@@ -40,6 +41,7 @@ export function AppLayout() {
           </main>
         </div>
       </div>
+      <AssistantDrawer />
     </div>
   )
 }

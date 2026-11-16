@@ -8,6 +8,7 @@ import { PlayerViewport } from '../components/player/PlayerViewport'
 import { ServiceCheck } from '../components/player/ServiceCheck'
 import { STATUS_LABEL } from '../components/player/labels'
 import { usePlayer } from '../hooks/usePlayer'
+import { getAppAssistantStore } from '../hooks/useAssistant'
 import { formatDuration, getTitle } from '../services/catalogue/catalogue'
 import { computeMetrics } from '../services/playback/metrics'
 
@@ -59,13 +60,18 @@ export function PlayerPage() {
               <span className="text-sm text-ink-500">Charts and findings for this session</span>
             </span>
           </Link>
-          <Link to="/assistant" className="flex items-center gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-5 hover:border-ink-700">
+          <button
+            type="button"
+            onClick={() => getAppAssistantStore().ask('Why does my stream keep buffering?')}
+            disabled={!state.session}
+            className="flex w-full items-center gap-3 rounded-2xl border border-ink-800 bg-ink-900 p-5 text-left hover:border-ink-700 disabled:opacity-50"
+          >
             <MessageSquare className="size-5 text-accent-400" aria-hidden />
             <span>
               <span className="block font-medium">Ask why it's buffering</span>
-              <span className="text-sm text-ink-500">The streaming assistant arrives in Phase 4</span>
+              <span className="text-sm text-ink-500">{state.session ? 'The assistant investigates this session with its diagnostic tools' : 'Press play first, so there is telemetry to investigate'}</span>
             </span>
-          </Link>
+          </button>
           <ServiceCheck />
           <p className="text-xs text-ink-500">
             Playback is modelled, not real video. In live mode the network data is real: download speed measured via Cloudflare and response time to the chosen

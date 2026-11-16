@@ -30,7 +30,7 @@ export interface AppCheckEnv {
 }
 
 export type FirebaseConfigResult =
-  | { ok: true; options: FirebaseOptions; appCheck: AppCheckEnv; cloudModel: string | null }
+  | { ok: true; options: FirebaseOptions; appCheck: AppCheckEnv; cloudModel: string | null; assistantModel: string | null }
   | { ok: false; missing: string[]; invalid: string[] }
 
 /**
@@ -50,7 +50,7 @@ const blankToUndefined = (env: Env): Record<string, string | undefined> =>
 export function readFirebaseConfig(env: Env = import.meta.env): FirebaseConfigResult {
   const clean = blankToUndefined(env)
   const invalid = Object.keys(clean).filter(
-    (k) => k.startsWith('VITE_FIREBASE_') || k.startsWith('VITE_APPCHECK_') || k === 'VITE_GEMINI_CLOUD_MODEL',
+    (k) => k.startsWith('VITE_FIREBASE_') || k.startsWith('VITE_APPCHECK_') || k === 'VITE_GEMINI_CLOUD_MODEL' || k === 'VITE_GEMINI_ASSISTANT_MODEL',
   ).filter((k) => clean[k] !== undefined && !PRINTABLE_ASCII.test(clean[k]!))
   if (invalid.length > 0) return { ok: false, missing: [], invalid }
   const parsed = firebaseEnvSchema.safeParse(clean)
@@ -75,5 +75,6 @@ export function readFirebaseConfig(env: Env = import.meta.env): FirebaseConfigRe
       debugToken: clean.VITE_APPCHECK_DEBUG_TOKEN ?? null,
     },
     cloudModel: clean.VITE_GEMINI_CLOUD_MODEL ?? null,
+    assistantModel: clean.VITE_GEMINI_ASSISTANT_MODEL ?? null,
   }
 }

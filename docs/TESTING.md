@@ -20,6 +20,11 @@
 | `tests/integration/player.test.tsx` | Player store timer and speed; Player → Stream Health journey through an interruption |
 | `tests/unit/liveProbe.test.ts` | Live probe on a fake network: throughput maths, no-cors service pings, unreachable services, monitor interval, adaptive size, offline → zero throughput, data budget; engine fed live samples |
 | `tests/integration/player.test.tsx` (live) | Live mode measures before play, pins speed to 1×, blocks skip, feeds readings to the engine, notes service changes, stops measuring on pause |
+| `tests/unit/assistantTools.test.ts` | The six tools on deterministic scenarios (spec 6.5): stable is healthy, poor links stalls to low throughput with event ids, unstable is identified as inconsistent, an error is reported with its time; no-session answers; period comparison; live data labelled as the viewer's connection, never the service; catalogue results only real titles |
+| `tests/unit/assistantValidation.test.ts` | Exactly six declarations, matching Zod keys; unknown tools rejected; undeclared, wrong-type and out-of-range args rejected; grounding accepts tool figures (with rounding/unit conversion) and flags invented ids and figures |
+| `tests/integration/cloudAssistant.test.ts` | The loop with a scripted Gemini: tools run and results go back as function responses; rejections reported to the model; model-call and tool-call limits; timeout restores the conversation; history rebuilt without dangling calls |
+| `tests/integration/cloudAssistantSdk.test.ts` | **Real `firebase/ai` SDK** with faked `fetch`: tools, system prompt and AUTO mode in the request; function response in the second request; cloud even when the Prompt API is available |
+| `tests/integration/AssistantChat.test.tsx` | Chat UI: real tool activity rows, report card, checked citations, recommendation cards, invented-id warning, rules-only mode without Firebase; Stream Health → drawer → investigation of the app's player session |
 | `tests/eval/discoveryEval.test.ts` | Evaluation set: 6 requests (3 with recorded live model output) with expected and forbidden recommendations |
 
 ## Evaluation
@@ -34,7 +39,7 @@ Automated tests cannot prove Gemini Nano runs on a given machine. With `.env.loc
 3. Submit a request; badge should read *Processed on your device*.
 4. In another browser (or with the flag off) the same request should read *Local model unavailable — using cloud fallback*.
 
-Playwright end-to-end tests are planned once the Phase 3–4 player and assistant journeys exist; the Discover → Watchlist journey is covered by a React Testing Library integration test meanwhile.
+A Playwright suite is planned for Phase 5. For Phase 4, the Player → *Ask why it's buffering* → drawer journey was run in Chromium against the dev server with Firebase's endpoint intercepted (scripted Gemini replies, real SDK and tools): 4 model calls, 4 tool calls, report and citations rendered. RTL integration tests cover the same journey in CI.
 
 ### Results
 | Date | Environment | Path | Result |
