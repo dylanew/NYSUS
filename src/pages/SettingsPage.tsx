@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { getFirebase, probeAppCheck, type AppCheckProbe } from '../services/firebase/app'
 import { DEFAULT_CLOUD_MODEL } from '../services/ai/firebaseAI'
+import { useAccount } from '../hooks/useAccount'
+import { describeStorage } from '../components/account/storageLabel'
 
 function Row({ label, value, ok }: { label: string; value: string; ok: boolean }) {
   return (
@@ -14,6 +16,8 @@ function Row({ label, value, ok }: { label: string; value: string; ok: boolean }
 export function SettingsPage() {
   const { config, services } = getFirebase()
   const [probe, setProbe] = useState<AppCheckProbe | 'running' | null>(null)
+  const { state: account } = useAccount()
+  const storage = describeStorage(account)
   const runProbe = async () => {
     setProbe('running')
     setProbe(await probeAppCheck())
@@ -21,6 +25,14 @@ export function SettingsPage() {
   return (
     <section className="max-w-2xl">
       <h1 className="text-2xl font-semibold">Settings</h1>
+      <h2 className="mt-8 text-sm font-medium uppercase tracking-wider text-ink-500">Account and data</h2>
+      <Row label="Account" value={account.kind === 'google' ? `Google: ${account.user?.displayName ?? 'signed in'}` : account.user ? 'Guest (anonymous Firebase account)' : 'Guest'} ok />
+      <Row label="Saved data" value={storage.text} ok={storage.tone !== 'error'} />
+      {account.storageNote && <p className="border-b border-ink-800 py-3 text-xs text-ink-500">{account.storageNote}</p>}
+      <p className="border-b border-ink-800 py-3 text-xs text-ink-500">
+        NYSUS saves your watchlist, what your discovery requests were about (genres, moods and themes, not the words you typed) and a summary of each playback
+        session. It does not save assistant conversations, your email address or anything about real streaming accounts. Use the account menu to delete it all.
+      </p>
       <h2 className="mt-8 text-sm font-medium uppercase tracking-wider text-ink-500">Firebase</h2>
       <Row label="Web app config" value={
           config.ok

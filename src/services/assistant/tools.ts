@@ -152,6 +152,7 @@ export function getViewerPreferences(_args: ToolArgs<'get_viewer_preferences'>, 
   for (const { title } of saved) decades[`${Math.floor(title.year / 10) * 10}s`] = (decades[`${Math.floor(title.year / 10) * 10}s`] ?? 0) + 1
   const session = ctx.getSession()
   const playing = session ? ctx.titles.find((t) => t.id === session.titleId) : undefined
+  const interests = ctx.getInterests?.()
   return {
     savedTitleCount: saved.length,
     favouriteGenres: profile ? top(profile.genres, 5).map(([genre, weight]) => ({ genre, weight })) : [],
@@ -160,9 +161,12 @@ export function getViewerPreferences(_args: ToolArgs<'get_viewer_preferences'>, 
     watchedTitles: saved.filter((s) => s.watched).map(({ title }) => ({ id: title.id, title: title.title, year: title.year })),
     watchlist: saved.filter((s) => !s.watched).map(({ title }) => ({ id: title.id, title: title.title, year: title.year })),
     currentlyInPlayer: playing ? { id: playing.id, title: playing.title } : null,
+    recentlyAskedFor: interests && interests.genres.length + interests.moods.length + interests.themes.length > 0 ? interests : null,
     note: saved.length
-      ? 'Inferred from titles saved in this browser. Watched titles count double.'
-      : 'The viewer has not saved or watched any titles yet, so there are no recorded preferences.',
+      ? 'Inferred from titles the viewer saved; watched titles count double. recentlyAskedFor lists what recent discovery requests were about.'
+      : interests && interests.genres.length + interests.moods.length + interests.themes.length > 0
+        ? 'No saved titles yet; recentlyAskedFor lists what recent discovery requests were about.'
+        : 'The viewer has not saved or watched any titles yet, so there are no recorded preferences.',
   }
 }
 

@@ -3,9 +3,14 @@ import { Check, Trash2 } from 'lucide-react'
 import { Artwork } from '../components/media/Artwork'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { formatDuration } from '../services/catalogue/catalogue'
+import { TasteSummary } from '../components/media/TasteSummary'
+import { useAccount } from '../hooks/useAccount'
+import { describeStorage, TONE_CLASS } from '../components/account/storageLabel'
 
 export function WatchlistPage() {
-  const { items, remove, setWatched } = useWatchlist()
+  const { items, profile, remove, setWatched } = useWatchlist()
+  const { state: account, store: accountStore } = useAccount()
+  const storage = describeStorage(account)
   const toWatch = items.filter((i) => !i.watched)
   const watched = items.filter((i) => i.watched)
 
@@ -13,25 +18,43 @@ export function WatchlistPage() {
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-semibold md:text-3xl">Watchlist</h1>
-        <p className="mt-1 text-sm text-ink-500">Saved on this device. What you save and watch shapes "Recommended for you".</p>
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-ink-500">
+          <span className="inline-flex items-center gap-1.5">
+            <span className={`size-2 rounded-full ${TONE_CLASS[storage.tone]}`} aria-hidden />
+            {storage.text}.
+          </span>
+          <span>What you save and watch shapes "Recommended for you".</span>
+        </p>
       </header>
       {items.length === 0 ? (
-        <p className="text-ink-300">
-          Nothing saved yet. <Link to="/discover" className="text-accent-300 underline">Find something to watch</Link>.
-        </p>
+        <div className="rounded-2xl border border-dashed border-ink-700 p-8 text-center">
+          <p className="text-ink-300">Nothing saved yet.</p>
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
+            <Link to="/discover" className="rounded-lg bg-accent-500 px-3 py-1.5 text-sm font-medium text-cream hover:bg-accent-600">
+              Find something to watch
+            </Link>
+            {account.kind === 'guest' && (
+              <button type="button" onClick={() => accountStore.loadDemoProfile()} className="rounded-lg border border-ink-700 px-3 py-1.5 text-sm text-ink-100 hover:border-ink-500">
+                Load demo profile
+              </button>
+            )}
+          </div>
+        </div>
       ) : (
         <>
-          <List heading={`To watch (${toWatch.length})`} items={toWatch} onRemove={remove} onToggle={(id) => setWatched(id, true)} toggleLabel="Mark watched" />
+          <List demo={account.demoTitleIds} heading={`To watch (${toWatch.length})`} items={toWatch} onRemove={remove} onToggle={(id) => setWatched(id, true)} toggleLabel="Mark watched" />
           {watched.length > 0 && (
-            <List heading={`Watched (${watched.length})`} items={watched} onRemove={remove} onToggle={(id) => setWatched(id, false)} toggleLabel="Mark unwatched" />
+            <List demo={account.demoTitleIds} heading={`Watched (${watched.length})`} items={watched} onRemove={remove} onToggle={(id) => setWatched(id, false)} toggleLabel="Mark unwatched" />
           )}
         </>
       )}
+      <TasteSummary profile={profile} />
     </div>
   )
 }
 
 function List(props: {
+  demo: string[]
   heading: string
   items: ReturnType<typeof useWatchlist>['items']
   onRemove: (id: string) => void
@@ -51,6 +74,11 @@ function List(props: {
               </Link>
               <p className="text-xs text-ink-500">
                 {title.year} · {formatDuration(title)}
+                {props.demo.includes(title.id) && (
+                  <span className="ml-2 rounded border border-butter/40 px-1.5 py-px text-[10px] uppercase tracking-wider text-butter" title="From the demo profile. Stays in guest mode.">
+                    Demo
+                  </span>
+                )}
               </p>
             </div>
             <button type="button" onClick={() => props.onToggle(title.id)} className="inline-flex items-center gap-1 rounded-md border border-ink-700 px-2 py-1 text-xs text-ink-300 hover:text-ink-100">

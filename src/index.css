@@ -56,6 +56,10 @@
   from { transform: translateY(-100%); }
   to { transform: translateY(100%); }
 }
+@keyframes progress {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}
 @keyframes shimmer {
   0%, 100% { opacity: 0.35; }
   50% { opacity: 1; }

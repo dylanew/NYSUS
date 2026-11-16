@@ -30,7 +30,7 @@ describe('watchlist store', () => {
     store.add('arrival')
     store.add('arrival')
     store.setWatched('arrival', true)
-    expect(store.getSnapshot()).toEqual([{ titleId: 'arrival', addedAt: 1, watched: true }])
+    expect(store.getSnapshot()).toEqual([{ titleId: 'arrival', addedAt: 1, watched: true, updatedAt: 1 }])
     expect(createWatchlistStore(storage).getSnapshot()).toHaveLength(1)
     store.remove('arrival')
     expect(store.getSnapshot()).toEqual([])

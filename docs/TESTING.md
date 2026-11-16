@@ -1,6 +1,10 @@
 # Testing
 
-`npm test` runs Vitest (jsdom). No test makes a network call or needs credentials.
+| Command | What it runs | Needs |
+|---|---|---|
+| `npm test` | Vitest unit, integration and eval suites (jsdom) | Nothing: no network, no credentials |
+| `npm run test:rules` | Firestore security rules and the real Firestore repository against the emulator | Java 11+ (firebase-tools downloads the emulator on first run); no Firebase project or login (`demo-nysus`) |
+| `npm run test:e2e` | Playwright, desktop Chrome and a Pixel 7 | Chromium (`npx playwright install chromium` once). Starts `vite --mode e2e` itself |
 
 | Suite | Covers |
 |---|---|
@@ -25,6 +29,12 @@
 | `tests/integration/cloudAssistant.test.ts` | The loop with a scripted Gemini: tools run and results go back as function responses; rejections reported to the model; model-call and tool-call limits; timeout restores the conversation; history rebuilt without dangling calls |
 | `tests/integration/cloudAssistantSdk.test.ts` | **Real `firebase/ai` SDK** with faked `fetch`: tools, system prompt and AUTO mode in the request; function response in the second request; cloud even when the Prompt API is available |
 | `tests/integration/AssistantChat.test.tsx` | Chat UI: real tool activity rows, report card, checked citations, recommendation cards, invented-id warning, rules-only mode without Firebase; Stream Health → drawer → investigation of the app's player session |
+| `tests/unit/persistenceStores.test.ts` | Watchlist change events and merge (newest wins, nothing lost, pre-Phase 5 data upgraded); preferences keep labels only, capped and merged; session records (metrics, notable events kept, samples thinned, no `undefined` for Firestore, too-short sessions skipped); the session recorder's save points |
+| `tests/integration/accountSync.test.ts` | Cloud sync merge and write-through, failures reported while local data is kept; account: anonymous guest with a cloud space, device-only fallback when anonymous sign-in is off, no-Firebase mode, guest → Google keeps uid and data, existing Google account gets the guest's data merged in, sign-out clears this browser and starts a new guest, delete my data, readable sign-in errors; demo titles stay with the guest when linking or signing in to an existing Google account, a title the guest already had stays theirs, cancelled sign-in restores the demo, demo ids survive reloads |
+| `tests/rules/firestore.rules.test.ts` | Emulator: owner-only access, signed-out and cross-user denial, exact document shapes (extra fields such as an email or conversation text rejected), id formats, timestamp and size caps, everything outside `users/{uid}` denied; session documents built by the app's own `toRecord` |
+| `tests/rules/firestoreRepo.test.ts` | Emulator: `createFirestoreRepo` round-trips watchlist, preferences and sessions under the rules; another user's space is refused; `deleteAll` leaves nothing |
+| `tests/e2e/journey.spec.ts` | Spec 11.3: open as a guest → search → recommendations with the inference source → add to watchlist (survives reload, shows in *Your taste*) → player → poor connection with stalls → *Ask why it's buffering* → tool activity → answer quoting the same buffering ratio the page shows, report card, event ids. Also: demo profile, *Continue watching* after playback, deleting saved data, 404 and no-session answers |
+| `tests/e2e/mobile.spec.ts` | Phone and desktop: no sideways scroll on any page, nav, account menu inside the viewport, assistant drawer |
 | `tests/eval/discoveryEval.test.ts` | Evaluation set: 6 requests (3 with recorded live model output) with expected and forbidden recommendations |
 
 ## Evaluation
@@ -39,7 +49,10 @@ Automated tests cannot prove Gemini Nano runs on a given machine. With `.env.loc
 3. Submit a request; badge should read *Processed on your device*.
 4. In another browser (or with the flag off) the same request should read *Local model unavailable — using cloud fallback*.
 
-A Playwright suite is planned for Phase 5. For Phase 4, the Player → *Ask why it's buffering* → drawer journey was run in Chromium against the dev server with Firebase's endpoint intercepted (scripted Gemini replies, real SDK and tools): 4 model calls, 4 tool calls, report and citations rendered. RTL integration tests cover the same journey in CI.
+### How the end-to-end suite mocks AI
+`playwright.config.ts` starts the app with `vite --mode e2e` and blanks the Firebase env vars (process env beats `.env.local`), so no real project, Auth or Firestore is touched and the guest is device-only. In that mode only, `src/services/ai/e2eMock.ts` replaces Gemini: preference extraction returns keyword-derived JSON labelled `on_device`, and the assistant is a scripted chat that asks for `get_playback_metrics` + `analyse_buffering`, then `generate_diagnostic_report`, then writes its answer from the function responses it received. The app's real loop validates and runs those tools on the live player session, so the figures in the answer are the session's own. The module is excluded from production builds (`import.meta.env.MODE === 'e2e'` is false there; checked by searching `dist/`).
+
+Before Phase 5, the Player → *Ask why it's buffering* → drawer journey was run in Chromium against the dev server with Firebase's endpoint intercepted (scripted Gemini replies, real SDK and tools): 4 model calls, 4 tool calls, report and citations rendered. RTL integration tests cover the same journey in CI.
 
 ### Results
 | Date | Environment | Path | Result |

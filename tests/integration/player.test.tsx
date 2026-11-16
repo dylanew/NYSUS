@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { act, render, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createMemoryRouter, RouterProvider } from 'react-router'
-import { routes } from '../../src/app/routes'
+import { renderRoute } from '../helpers/renderRoute'
 import { createPlayerStore, playerStore, type Scheduler } from '../../src/services/playback/playerStore'
 
 function fakeScheduler() {
@@ -48,7 +47,7 @@ describe('player store', () => {
 
 describe('Player → Stream Health journey', () => {
   it('plays an interruption scenario and shows the error on both pages', async () => {
-    render(<RouterProvider router={createMemoryRouter(routes, { initialEntries: ['/player?title=arrival'] })} />)
+    await renderRoute('/player?title=arrival')
     expect(screen.getByRole('heading', { name: 'Arrival' })).toBeInTheDocument()
 
     await userEvent.selectOptions(screen.getByLabelText('Network'), 'interruption')

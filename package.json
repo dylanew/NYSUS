@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-nysus \"vitest run --config vitest.rules.config.ts\"",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "firebase": "^13.3.0",
@@ -22,6 +24,8 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.5",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
@@ -30,6 +34,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "firebase-tools": "^15.36.0",
     "jsdom": "^31.0.1",
     "oxlint": "^1.90.0",
     "tailwindcss": "^4.3.5",

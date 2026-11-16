@@ -5,6 +5,7 @@ import { explainError } from '../ai/errors'
 import { getService } from '../network/liveProbe'
 import { playerStore, type PlayerStore } from '../playback/playerStore'
 import { watchlistStore, type WatchlistStore } from '../watchlist/watchlistStore'
+import { preferencesStore, topInterests, type PreferencesStore } from '../preferences/preferencesStore'
 import type { MediaTitle } from '../../types/media'
 import type { ToolContext } from './context'
 import { EVENT_ID_PATTERN, checkGrounding, type GroundingCheck } from './grounding'
@@ -47,7 +48,11 @@ export interface AssistantState {
 }
 
 /** Reads the app's own stores; this is the only data the tools can reach. */
-export function createToolContext(player: PlayerStore = playerStore, watchlist: WatchlistStore = watchlistStore): ToolContext {
+export function createToolContext(
+  player: PlayerStore = playerStore,
+  watchlist: WatchlistStore = watchlistStore,
+  preferences: PreferencesStore = preferencesStore,
+): ToolContext {
   return {
     getSession: () => player.getSnapshot().session,
     getPlayback: () => {
@@ -59,6 +64,10 @@ export function createToolContext(player: PlayerStore = playerStore, watchlist: 
         .getSnapshot()
         .map((e) => ({ title: getTitle(e.titleId), watched: e.watched }))
         .filter((e): e is { title: MediaTitle; watched: boolean } => e.title !== undefined),
+    getInterests: () => {
+      const p = preferences.getSnapshot()
+      return { genres: topInterests(p, 'genres'), moods: topInterests(p, 'moods'), themes: topInterests(p, 'themes') }
+    },
     titles: allTitles(),
     get currentYear() {
       return new Date().getFullYear()

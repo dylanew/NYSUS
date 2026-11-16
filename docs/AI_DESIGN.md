@@ -76,13 +76,13 @@ Phase 3 built the deterministic layer the Phase 4 tools will wrap. The model wil
 | Tool | Wraps | Returns |
 |---|---|---|
 | `search_catalogue` | keyword vocabulary + `findMentionedTitle` + `rankTitles` (+ watchlist taste profile) | Only real catalogue titles, with the criteria each matched and the app's 0–100 match score |
-| `get_viewer_preferences` | `buildProfile` over the watchlist | Top genres, moods, decades, watched titles, watchlist, title in the player |
+| `get_viewer_preferences` | `buildProfile` over the watchlist + recent discovery interests | Top genres, moods, decades, watched titles, watchlist, title in the player, what recent requests asked for (labels only) |
 | `get_playback_metrics` | `computeMetrics` (optionally the last N seconds) | Buffering time/ratio/frequency, throughput average/range/variability, bitrate, latency, errors and quality changes with event ids |
 | `analyse_buffering` | `analyseBuffering` | Each stall: start/end ids, time, duration, throughput vs bitrate, latency, related events, factors; plus cross-stall patterns |
 | `compare_network_conditions` | `computeMetrics` per period | Periods split at network-condition changes (else halves, or fixed windows) and best vs worst differences |
 | `generate_diagnostic_report` | `healthFindings` + rules | Summary, most likely explanation (flagged when it is a correlation), observed/calculated evidence with ids, confidence and why, actions, limitations |
 
-Tools receive a `ToolContext` (session, player settings, watchlist, catalogue) and nothing else: no Firestore, no fetch, no player controls. Every tool result carries a `dataSource` (`simulated`, `live`, `mixed`). Live notes say latency is the service's public website and throughput comes from Cloudflare, and that NYSUS cannot diagnose that service itself.
+Tools receive a `ToolContext` (session, player settings, watchlist, recent interests, catalogue) and nothing else: no Firestore, no fetch, no player controls. Every tool result carries a `dataSource` (`simulated`, `live`, `mixed`). Live notes say latency is the service's public website and throughput comes from Cloudflare, and that NYSUS cannot diagnose that service itself.
 
 Diagnosis rules worth knowing: "unstable" means throughput fell below the bitrate and *recovered* (above the bitrate and at least 1.2 Mbps) two or more times; one drop that stays low is "poor". If even 360p needs more than the throughput measured around the stalls, the report says lowering quality will not fix it rather than recommending 360p.
 

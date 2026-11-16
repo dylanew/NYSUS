@@ -1,0 +1,75 @@
+rules_version = '2';
+
+// NYSUS Firestore rules. Default deny: only the paths below exist, and each user can read
+// and write only their own documents, in the exact shape the app writes. Guests use
+// Firebase anonymous auth, so they get the same private space as Google accounts.
+//
+//   users/{uid}/watchlist/{titleId}
+//   users/{uid}/preferences/profile
+//   users/{uid}/playbackSessions/{recordId}
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Millisecond timestamps from Date.now(): integers, after 2020 and not far in the future.
+    function isTime(v) {
+      return v is int && v > 1577836800000 && v < request.time.toMillis() + 86400000;
+    }
+
+    function isSlug(v) {
+      return v is string && v.matches('^[a-z0-9-]{1,64}$');
+    }
+
+    match /users/{uid} {
+
+      match /watchlist/{titleId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validWatchEntry(titleId, request.resource.data);
+      }
+
+      match /preferences/{docId} {
+        allow read, delete: if isOwner(uid) && docId == 'profile';
+        allow create, update: if isOwner(uid) && docId == 'profile' && validPreferences(request.resource.data);
+      }
+
+      match /playbackSessions/{recordId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validSession(recordId, request.resource.data);
+      }
+    }
+
+    function validWatchEntry(titleId, d) {
+      return d.keys().hasOnly(['titleId', 'addedAt', 'watched', 'updatedAt'])
+        && d.keys().hasAll(['titleId', 'addedAt', 'watched', 'updatedAt'])
+        && isSlug(titleId) && d.titleId == titleId
+        && isTime(d.addedAt) && isTime(d.updatedAt)
+        && d.watched is bool;
+    }
+
+    // Interests are structured labels (genres, moods, themes), never request text.
+    function validPreferences(d) {
+      return d.keys().hasOnly(['interests', 'updatedAt'])
+        && d.keys().hasAll(['interests', 'updatedAt'])
+        && d.interests is list && d.interests.size() <= 12
+        && (d.updatedAt == 0 || isTime(d.updatedAt));
+    }
+
+    function validSession(recordId, d) {
+      return d.keys().hasOnly(['id', 'titleId', 'startedAt', 'updatedAt', 'elapsedMs', 'status', 'scenarios', 'metrics', 'events', 'eventCount'])
+        && d.keys().hasAll(['id', 'titleId', 'startedAt', 'updatedAt', 'elapsedMs', 'status', 'scenarios', 'metrics', 'events', 'eventCount'])
+        && recordId.matches('^[a-z0-9]{1,16}-s[0-9]{1,6}$') && d.id == recordId
+        && isSlug(d.titleId)
+        && isTime(d.startedAt) && isTime(d.updatedAt)
+        && d.elapsedMs is int && d.elapsedMs >= 0
+        && d.status in ['playing', 'paused', 'buffering', 'ended', 'error']
+        && d.scenarios is list && d.scenarios.size() <= 5
+        && d.events is list && d.events.size() <= 210
+        && d.eventCount is int
+        && d.metrics is map
+        && d.metrics.keys().hasOnly(['observedMs', 'bufferingMs', 'bufferingRatioPct', 'bufferingEvents', 'averageThroughputMbps', 'averageBitrateKbps', 'errorCount', 'qualityChanges']);
+    }
+  }
+}
