@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
-import { AlertOctagon, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { AlertOctagon, AlertTriangle, CheckCircle2, MessageSquare } from 'lucide-react'
+import { getAppAssistantStore } from '../hooks/useAssistant'
 import { BufferChart, ThroughputChart } from '../components/charts/ThroughputChart'
 import { toChartPoints } from '../components/charts/chartData'
 import { EventTimeline } from '../components/player/EventTimeline'
@@ -73,7 +74,16 @@ export function StreamHealthPage() {
             )
           })}
         </ul>
-        <p className="text-xs text-ink-500">Findings come from fixed rules over the recorded telemetry. The streaming assistant in Phase 4 will investigate with the same data.</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-ink-500">Findings come from fixed rules over the recorded telemetry. The streaming assistant investigates with the same data and tools.</p>
+          <button
+            type="button"
+            onClick={() => getAppAssistantStore().ask('Investigate this session: what is going wrong, and what should I do?')}
+            className="inline-flex items-center gap-2 rounded-full border border-accent-500/60 px-3 py-1.5 text-xs text-accent-300 hover:bg-accent-500/10"
+          >
+            <MessageSquare className="size-3.5" aria-hidden /> Ask the assistant to investigate
+          </button>
+        </div>
       </section>
 
       <section className="space-y-3 rounded-2xl border border-ink-800 bg-ink-900 p-5">

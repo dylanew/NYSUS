@@ -68,5 +68,37 @@ Phase 3 built the deterministic layer the Phase 4 tools will wrap. The model wil
 - In live mode the same functions run on real measurements of the viewer's connection, so the assistant can explain a real stall. It must still describe service latency as website response time, not server health.
 - `healthFindings(session)` gives the rule-based baseline that `generate_diagnostic_report` must stay consistent with.
 
-## Workflow B — cloud assistant (Phase 4, not started)
-Will use a separate `ONLY_IN_CLOUD`-style cloud model with `tools: [{ functionDeclarations }]`, a bounded function-calling loop with Zod-validated arguments, and deterministic tool implementations.
+## Workflow B — cloud assistant (Phase 4)
+
+`createAssistantModel()` (`services/ai/firebaseAI.ts`) builds an `ONLY_IN_CLOUD` Gemini model with the six tool declarations, `FunctionCallingMode.AUTO` and the system prompt `ASSISTANT_SYSTEM` (`prompts.ts`, version `assistant-v1`). Model: `VITE_GEMINI_ASSISTANT_MODEL`, else the hybrid cloud model (`gemini-3.5-flash-lite` by default). It is never routed on-device: Gemini Nano has no multi-turn chat or function calling, and an SDK-level test proves the Prompt API is not touched even when it reports `available`.
+
+### Tools (`services/assistant/`)
+| Tool | Wraps | Returns |
+|---|---|---|
+| `search_catalogue` | keyword vocabulary + `findMentionedTitle` + `rankTitles` (+ watchlist taste profile) | Only real catalogue titles, with the criteria each matched and the app's 0–100 match score |
+| `get_viewer_preferences` | `buildProfile` over the watchlist | Top genres, moods, decades, watched titles, watchlist, title in the player |
+| `get_playback_metrics` | `computeMetrics` (optionally the last N seconds) | Buffering time/ratio/frequency, throughput average/range/variability, bitrate, latency, errors and quality changes with event ids |
+| `analyse_buffering` | `analyseBuffering` | Each stall: start/end ids, time, duration, throughput vs bitrate, latency, related events, factors; plus cross-stall patterns |
+| `compare_network_conditions` | `computeMetrics` per period | Periods split at network-condition changes (else halves, or fixed windows) and best vs worst differences |
+| `generate_diagnostic_report` | `healthFindings` + rules | Summary, most likely explanation (flagged when it is a correlation), observed/calculated evidence with ids, confidence and why, actions, limitations |
+
+Tools receive a `ToolContext` (session, player settings, watchlist, catalogue) and nothing else: no Firestore, no fetch, no player controls. Every tool result carries a `dataSource` (`simulated`, `live`, `mixed`). Live notes say latency is the service's public website and throughput comes from Cloudflare, and that NYSUS cannot diagnose that service itself.
+
+Diagnosis rules worth knowing: "unstable" means throughput fell below the bitrate and *recovered* (above the bitrate and at least 1.2 Mbps) two or more times; one drop that stays low is "poor". If even 360p needs more than the throughput measured around the stalls, the report says lowering quality will not fix it rather than recommending 360p.
+
+### The loop (`services/ai/cloudAssistant.ts`)
+We run function calling ourselves (no `functionReference`, so the SDK never executes anything):
+1. `chat.sendMessage(text)`; the SDK keeps history, including Gemini 3 thought signatures.
+2. For each `functionCall`: reject unknown names, validate args with strict Zod schemas (`toolSchemas.ts`), run the deterministic tool, catch errors. Problems go back to the model as `{ error }` so it can recover; nothing throws past the loop.
+3. Send all `functionResponse` parts back in one message and repeat.
+
+Limits per viewer message: 6 model calls, 10 tool executions, 60 s (an `AbortSignal` cancels the HTTP request). If a turn is cut short, the chat is rebuilt from the pre-turn history plus a plain user/model text pair, so the next request never carries a dangling function call. Errors and timeouts restore the pre-turn history.
+
+### Grounding
+- The diagnostic report card and recommendation cards render tool output directly, not the model's wording.
+- `grounding.ts` checks the final answer: event ids it cites that no tool returned, and figures with units (%, Mbps, kbps, ms, s) that match no tool value (allowing rounding and kbps↔Mbps, ms↔s). Both are shown to the viewer in red/amber; cited ids that check out are listed with their event descriptions.
+- A reply that used no tools says so.
+- Tool activity rows are emitted by the loop as each call starts and finishes.
+- Without Firebase, *Run diagnosis without AI* runs the same three tools directly and labels the result *Rules-based diagnosis, no AI*.
+
+The conversation lives in memory only (spec 9.2: do not store unnecessary conversation data).
