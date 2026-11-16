@@ -35,6 +35,13 @@
   --color-warn: #fbbf24;
   --color-danger: #fb7185;
 
+  /* Retro TV cabinet (Player page): walnut veneer and brass trim. */
+  --color-wood-400: #a5683d;
+  --color-wood-500: #7d4626;
+  --color-wood-600: #5f3319;
+  --color-wood-700: #3d200f;
+  --color-brass: #d9a94e;
+
   /* Stripe width for the popcorn-bucket pattern. */
   --stripe: 14px;
 }
@@ -44,6 +51,19 @@
   --animate-packet: packet var(--packet-duration, 1.6s) linear infinite;
   --animate-scan: scan 3.2s linear infinite;
   --animate-shimmer: shimmer 1.4s ease-in-out infinite;
+  --animate-static: static 0.55s steps(6) forwards;
+  --animate-osd: osd 2.2s ease-in forwards;
+}
+
+@keyframes static {
+  0% { opacity: 0.9; transform: translate(0, 0); }
+  50% { opacity: 0.7; transform: translate(-3%, 2%); }
+  99% { opacity: 0.4; transform: translate(2%, -3%); }
+  100% { opacity: 0; visibility: hidden; }
+}
+@keyframes osd {
+  0%, 80% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
 }
 
 @keyframes packet {
@@ -79,6 +99,78 @@
     var(--color-accent-500) 0 var(--stripe),
     var(--color-cream) var(--stripe) calc(var(--stripe) * 2)
   );
+}
+
+/*
+ * Retro TV (src/components/player/RetroTV.tsx). Everything is gradients and inline SVG
+ * noise, no images. The wood grain is fractal noise stretched along x, tinted dark.
+ */
+@utility wood-grain {
+  background-color: var(--color-wood-600);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.003 0.09' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.12 0 0 0 0 0.05 0 0 0 0 0.01 0 0 0 1.6 -0.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(179.4deg, rgb(255 214 170 / 0.05) 0 1px, transparent 1px 6px),
+    linear-gradient(180deg, var(--color-wood-400), var(--color-wood-500) 30%, var(--color-wood-600) 75%, var(--color-wood-700));
+  background-size: 600px 300px, auto, auto;
+}
+@utility tv-cabinet {
+  box-shadow:
+    inset 0 2px 0 rgb(255 220 180 / 0.25),
+    inset 0 -4px 10px rgb(0 0 0 / 0.45),
+    inset 0 0 0 1px rgb(0 0 0 / 0.35),
+    0 24px 50px -12px rgb(0 0 0 / 0.8);
+}
+@utility tv-bezel {
+  background: linear-gradient(160deg, #2b2320, #0d0908 55%, #1b1513);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    inset 0 -2px 4px rgb(0 0 0 / 0.8),
+    0 0 0 3px var(--color-wood-700),
+    0 0 0 4px rgb(255 214 170 / 0.15);
+}
+/* The tube is slightly barrel-shaped, so the corners round more than a flat screen. */
+@utility tv-crt {
+  border-radius: 7% / 10%;
+  box-shadow: 0 0 0 2px #000, 0 0 18px rgb(0 0 0 / 0.9);
+}
+@utility tv-glass {
+  border-radius: inherit;
+  background-image:
+    radial-gradient(ellipse 70% 45% at 28% 12%, rgb(255 255 255 / 0.13), transparent 70%),
+    repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.22) 0 1px, transparent 1px 3px);
+  box-shadow: inset 0 0 40px 8px rgb(0 0 0 / 0.75), inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+@utility tv-static {
+  inset: -10%;
+  background-color: #777;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: hard-light;
+}
+@utility tv-grille {
+  background:
+    repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.65) 0 3px, transparent 3px 6px),
+    linear-gradient(180deg, #2a1d16, #140d0a);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.8), 0 1px 0 rgb(255 220 180 / 0.15);
+}
+@utility tv-badge {
+  background: linear-gradient(180deg, #f5d58a, var(--color-brass) 50%, #9c7429);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.5);
+}
+@utility tv-foot {
+  background: linear-gradient(180deg, var(--color-wood-700), #1a0d06);
+  box-shadow: 0 6px 10px -4px rgb(0 0 0 / 0.8);
+}
+/* Knob: a dark bakelite well with a ridged cream-and-chrome cap that rotates. */
+@utility tv-knob {
+  background: radial-gradient(circle at 50% 50%, #0b0807 60%, #2a1f1a 72%, #050302);
+  box-shadow: 0 4px 8px rgb(0 0 0 / 0.7), inset 0 1px 1px rgb(255 255 255 / 0.15);
+}
+@utility tv-knob-cap {
+  inset: 9%;
+  background:
+    radial-gradient(circle at 38% 30%, rgb(255 255 255 / 0.35), transparent 45%),
+    repeating-conic-gradient(from 0deg, #3a2d27 0 6deg, #1c1411 6deg 12deg);
+  box-shadow: inset 0 0 0 3px #120c0a, inset 0 -3px 6px rgb(0 0 0 / 0.6), 0 2px 4px rgb(0 0 0 / 0.6);
 }
 
 @media (prefers-reduced-motion: reduce) {

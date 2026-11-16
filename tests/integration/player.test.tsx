@@ -104,3 +104,28 @@ describe('player store in live mode', () => {
     expect(monitor.running).toBe(false)
   })
 })
+
+describe('retro TV knobs', () => {
+  it('are keyboard sliders that drive the same settings as the dropdowns', async () => {
+    await renderRoute('/player?title=arrival')
+    act(() => playerStore.setScenario('stable'))
+    act(() => playerStore.setQualityMode('auto'))
+
+    const channel = screen.getByRole('slider', { name: 'Channel dial' })
+    expect(channel).toHaveAttribute('aria-valuetext', 'Channel 2: Stable connection')
+    channel.focus()
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}')
+    expect(playerStore.getSnapshot().scenario).toBe('poor')
+    expect(screen.getByLabelText('Network')).toHaveValue('poor')
+
+    const picture = screen.getByRole('slider', { name: 'Picture dial' })
+    picture.focus()
+    await userEvent.keyboard('{End}')
+    expect(playerStore.getSnapshot().qualityMode).toBe('360p')
+
+    const volume = screen.getByRole('slider', { name: 'Volume' })
+    volume.focus()
+    await userEvent.keyboard('{Home}')
+    expect(volume).toHaveAttribute('aria-valuetext', 'Muted')
+  })
+})
