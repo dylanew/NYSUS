@@ -49,6 +49,9 @@ Automated tests cannot prove Gemini Nano runs on a given machine. With `.env.loc
 3. Submit a request; badge should read *Processed on your device*.
 4. In another browser (or with the flag off) the same request should read *Local model unavailable — using cloud fallback*.
 
+### Production build on the Hosting emulator
+Before Phase 6 was merged, `npm run build` was served by the Firebase Hosting emulator with the repo's `firebase.json` and loaded in a fresh Chromium context: every route, including deep links (`/player`, `/title/interstellar`, an unknown path), returned 200 and rendered with no console errors; `/assets/*` came back `immutable`, pages `no-cache`. A build with a debug token in `.env.local` was checked to contain no token (it did before the fix). The hosted site itself is checked by hand from an Incognito window, see [DEPLOYMENT.md](DEPLOYMENT.md#test-the-hosted-app-from-a-fresh-browser-session).
+
 ### How the end-to-end suite mocks AI
 `playwright.config.ts` starts the app with `vite --mode e2e` and blanks the Firebase env vars (process env beats `.env.local`), so no real project, Auth or Firestore is touched and the guest is device-only. In that mode only, `src/services/ai/e2eMock.ts` replaces Gemini: preference extraction returns keyword-derived JSON labelled `on_device`, and the assistant is a scripted chat that asks for `get_playback_metrics` + `analyse_buffering`, then `generate_diagnostic_report`, then writes its answer from the function responses it received. The app's real loop validates and runs those tools on the live player session, so the figures in the answer are the session's own. The module is excluded from production builds (`import.meta.env.MODE === 'e2e'` is false there; checked by searching `dist/`).
 
