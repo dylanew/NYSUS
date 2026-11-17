@@ -1,0 +1,10 @@
+NYSUS
+Copyright 2026 Dylan Ewens
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The film and series entries in src/data/catalogue.ts are short factual summaries
+used for demonstration. Artwork is generated in the app; no posters or video
+from any studio or streaming service are included. Live mode requests Cloudflare's
+public speed-test endpoint (speed.cloudflare.com) and the public websites of
+streaming services to measure the viewer's own connection.

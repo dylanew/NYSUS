@@ -79,3 +79,6 @@ The spec suggested top-level `playbackSessions/` and `diagnosticReports/`. Sessi
 **Rules** (`firestore.rules`): default deny; a user can only touch `users/{their uid}/…`; every write must have exactly the fields the app writes, with types, id/slug formats, sane timestamps and size caps (12 interests, 210 events). Tested against the emulator in `tests/rules/`.
 
 **Session recording.** `recordSessions` watches the player and saves the current session when it pauses, ends or errors, when a new session replaces it, at most every 10 s otherwise, and when the tab is hidden. Sessions under 5 s of playback aren't kept. Home shows them under *Continue watching*.
+
+## Hosting (Phase 6)
+A static build on Firebase Hosting (`firebase.json` → `hosting`): `dist/` is served with every path rewritten to `index.html`, hashed `/assets/**` cached for a year and everything else `no-cache`. Build-time config comes from `.env.local`; `.env.production` blanks the App Check debug settings because Vite inlines every `VITE_*` value into the bundle, and `vite.config.ts` refuses a production build that still has a debug token. `npm run deploy` checks the required values (`scripts/check-deploy-env.mjs`), builds and deploys Hosting only. Steps: [DEPLOYMENT.md](DEPLOYMENT.md).
